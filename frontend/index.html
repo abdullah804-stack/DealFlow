@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VentureScout — Autonomous Deal Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div id="scanline"></div>
+
+<div id="app">
+
+  <!-- ======================= SIDEBAR ======================= -->
+  <aside id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 32 32" width="22" height="22"><path d="M16 2 L29 9 V23 L16 30 L3 23 V9 Z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M16 9 L16 23 M9.5 12.5 L16 9 L22.5 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">VentureScout</span>
+        <span class="brand-tag">deal intelligence</span>
+      </div>
+    </div>
+
+    <nav id="appNav">
+      <button class="nav-btn active" data-view="dashboard"><span class="nav-ico">◈</span><span>Dashboard</span></button>
+      <button class="nav-btn" data-view="reports"><span class="nav-ico">▤</span><span>Reports</span></button>
+      <button class="nav-btn" data-view="funnel"><span class="nav-ico">▽</span><span>Funnel</span></button>
+      <button class="nav-btn" data-view="backtest"><span class="nav-ico">◔</span><span>Backtest</span></button>
+      <button class="nav-btn" data-view="chat"><span class="nav-ico">◇</span><span>Chat</span></button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="status-row">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="apiStatus" class="status-checking">connecting…</span>
+      </div>
+      <div class="clock-row" id="currentTime">--:--:--</div>
+      <div class="cadence-row">runs daily · 06:00 UTC</div>
+    </div>
+  </aside>
+
+  <!-- ======================= MAIN ======================= -->
+  <div id="main">
+
+    <!-- Ticker -->
+    <div id="ticker">
+      <div class="ticker-label">LIVE FEED</div>
+      <div class="ticker-track" id="tickerTrack"></div>
+    </div>
+
+    <main id="appContent">
+
+      <!-- ============ DASHBOARD ============ -->
+      <section id="view-dashboard" class="view active">
+        <div class="hero">
+          <div class="hero-copy">
+            <div class="eyebrow">Autonomous evaluation engine</div>
+            <h1>An analyst that never<br/>closes its terminal.</h1>
+            <p class="hero-sub">Every day, the system sources fresh companies, stress-tests the thesis, and escalates only what survives debate. This is what it found.</p>
+          </div>
+          <div class="hero-signal">
+            <svg id="pulseSvg" viewBox="0 0 320 90" preserveAspectRatio="none">
+              <polyline id="pulseLine" points="" fill="none" stroke-width="1.6"/>
+            </svg>
+            <div class="hero-signal-label">EVALUATION THROUGHPUT · 7D</div>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card" data-tone="blue">
+            <div class="stat-top"><span class="stat-index">01</span><span class="stat-arrow">→</span></div>
+            <div class="stat-number" id="statDiscovered" data-target="0">0</div>
+            <div class="stat-label">Discovered</div>
+          </div>
+          <div class="stat-card" data-tone="amber">
+            <div class="stat-top"><span class="stat-index">02</span><span class="stat-arrow">→</span></div>
+            <div class="stat-number" id="statValidated" data-target="0">0</div>
+            <div class="stat-label">Validated</div>
+          </div>
+          <div class="stat-card" data-tone="coral">
+            <div class="stat-top"><span class="stat-index">03</span><span class="stat-arrow">→</span></div>
+            <div class="stat-number" id="statEscalated" data-target="0">0</div>
+            <div class="stat-label">Escalated</div>
+          </div>
+          <div class="stat-card" data-tone="teal">
+            <div class="stat-top"><span class="stat-index">04</span></div>
+            <div class="stat-number" id="statInvested" data-target="0">0</div>
+            <div class="stat-label">Invested</div>
+          </div>
+        </div>
+
+        <div class="nav-grid">
+          <a href="#" class="nav-card" data-view="reports">
+            <div class="nav-card-top"><span class="nav-glyph">▤</span><span class="nav-go">open →</span></div>
+            <h3>Daily reports</h3>
+            <p>VC-memo writeups for today's strongest candidates</p>
+          </a>
+          <a href="#" class="nav-card" data-view="funnel">
+            <div class="nav-card-top"><span class="nav-glyph">▽</span><span class="nav-go">open →</span></div>
+            <h3>Discovery funnel</h3>
+            <p>Found → validated → escalated → invested</p>
+          </a>
+          <a href="#" class="nav-card" data-view="backtest">
+            <div class="nav-card-top"><span class="nav-glyph">◔</span><span class="nav-go">open →</span></div>
+            <h3>Backtest</h3>
+            <p>How the model's calls held up against reality</p>
+          </a>
+          <a href="#" class="nav-card" data-view="chat">
+            <div class="nav-card-top"><span class="nav-glyph">◇</span><span class="nav-go">open →</span></div>
+            <h3>Query memory</h3>
+            <p>Ask the system what it has seen</p>
+          </a>
+        </div>
+      </section>
+
+      <!-- ============ REPORTS ============ -->
+      <section id="view-reports" class="view">
+        <div class="view-header">
+          <div>
+            <div class="eyebrow">Archive</div>
+            <h2>Daily reports</h2>
+            <p class="view-subtitle">Investment memos, generated end to end</p>
+          </div>
+          <div class="view-controls">
+            <select id="reportsDays" class="select-input">
+              <option value="7">Last 7 days</option>
+              <option value="14">Last 14 days</option>
+              <option value="30" selected>Last 30 days</option>
+            </select>
+          </div>
+        </div>
+        <div id="reportsContent"><div class="loading-state">Loading reports…</div></div>
+      </section>
+
+      <!-- ============ FUNNEL ============ -->
+      <section id="view-funnel" class="view">
+        <div class="view-header">
+          <div>
+            <div class="eyebrow">Pipeline</div>
+            <h2>Discovery funnel</h2>
+            <p class="view-subtitle">How candidates survive each stage of scrutiny</p>
+          </div>
+          <div class="view-controls">
+            <select id="funnelDays" class="select-input">
+              <option value="7">Last 7 days</option>
+              <option value="30" selected>Last 30 days</option>
+              <option value="90">Last 90 days</option>
+            </select>
+          </div>
+        </div>
+        <div id="funnelContent"><div class="loading-state">Loading funnel data…</div></div>
+      </section>
+
+      <!-- ============ BACKTEST ============ -->
+      <section id="view-backtest" class="view">
+        <div class="view-header">
+          <div>
+            <div class="eyebrow">Track record</div>
+            <h2>Backtest results</h2>
+            <p class="view-subtitle">Historical accuracy, measured against outcomes</p>
+          </div>
+        </div>
+        <div id="backtestContent"><div class="loading-state">Loading backtest results…</div></div>
+      </section>
+
+      <!-- ============ CHAT ============ -->
+      <section id="view-chat" class="view">
+        <div class="view-header">
+          <div>
+            <div class="eyebrow">Retrieval</div>
+            <h2>Query memory</h2>
+            <p class="view-subtitle">Ask what the system has evaluated, and why</p>
+          </div>
+          <button id="clearChatBtn" class="btn-ghost">Clear chat</button>
+        </div>
+        <div id="chatContainer">
+          <div id="chatMessages">
+            <div class="chat-empty">
+              <div class="chat-empty-icon">◇</div>
+              <p>Try asking</p>
+              <ul class="chat-suggestions">
+                <li onclick="askSuggested(this)">What startups have we evaluated recently?</li>
+                <li onclick="askSuggested(this)">Tell me about AI startups in the portfolio</li>
+                <li onclick="askSuggested(this)">What were the best investment decisions?</li>
+                <li onclick="askSuggested(this)">Show me trends in the last 30 days</li>
+              </ul>
+            </div>
+          </div>
+          <div class="chat-input-area">
+            <textarea id="chatInput" placeholder="Ask about the system's memory…" rows="1"></textarea>
+            <button id="sendBtn" class="btn-send">Send</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer id="appFooter">
+      <p>All predictions are LLM-generated estimates, not financial advice.</p>
+      <p class="footer-small">Runs daily at 06:00 UTC · Powered by Groq</p>
+    </footer>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

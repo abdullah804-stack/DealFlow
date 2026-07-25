@@ -1,0 +1,163 @@
+# .github/workflows/scheduled_run.yml
+# VentureScout AI — Daily Autonomous Cycle
+# Runs every 24 hours at 06:00 UTC
+
+name: VentureScout AI Daily Cycle
+
+on:
+  # Scheduled run: Daily at 06:00 UTC
+  schedule:
+    - cron: '0 6 * * *'
+  
+  # Allow manual trigger from GitHub Actions UI
+  workflow_dispatch:
+    inputs:
+      verbose:
+        description: 'Enable verbose logging'
+        type: boolean
+        default: false
+      skip_backtest:
+        description: 'Skip backtest execution'
+        type: boolean
+        default: false
+
+# Required permissions
+permissions:
+  contents: write  # For committing results
+  actions: read    # For checking workflow status
+
+jobs:
+  run_cycle:
+    name: Run Daily Cycle
+    runs-on: ubuntu-latest
+    
+    # Timeout after 30 minutes (prevents hanging)
+    timeout-minutes: 30
+    
+    env:
+      PYTHON_VERSION: '3.10'
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      GITHUB_ACTIONS: 'true'
+    
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # Fetch full history for commit
+          fetch-depth: 0
+      
+      # Step 2: Setup Python
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest  # For testing
+      
+      # Step 4: Create data directory
+      - name: Create data directory
+        run: |
+          mkdir -p data
+          echo "Data directory created"
+      
+      # Step 5: Validate environment
+      - name: Validate environment
+        run: |
+          python -c "
+          import os
+          print(f'GROQ_API_KEY: {os.getenv(\"GROQ_API_KEY\", \"\")[:8]}...')
+          print(f'OPENROUTER_API_KEY: {os.getenv(\"OPENROUTER_API_KEY\", \"\")[:8]}...')
+          if not os.getenv('GROQ_API_KEY'):
+              raise ValueError('GROQ_API_KEY not set')
+          if not os.getenv('OPENROUTER_API_KEY'):
+              raise ValueError('OPENROUTER_API_KEY not set')
+          print('✅ Environment valid')
+          "
+      
+      # Step 6: Run the daily cycle
+      - name: Run daily cycle
+        id: daily_cycle
+        continue-on-error: true
+        run: |
+          echo "Starting daily cycle at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          
+          # Run with verbose flag if requested
+          if [ "${{ github.event.inputs.verbose }}" == "true" ]; then
+            python -m src.scheduler.run_cycle --verbose
+          else
+            python -m src.scheduler.run_cycle
+          fi
+      
+      # Step 7: Run backtest (if not skipped)
+      - name: Run backtest
+        if: ${{ github.event.inputs.skip_backtest != 'true' }}
+        continue-on-error: true
+        run: |
+          echo "Running backtest..."
+          python -m src.evaluation.backtest || echo "⚠️ Backtest failed, continuing..."
+      
+      # Step 8: Commit results (if changes)
+      - name: Commit results
+        if: always()  # Run even if previous steps failed
+        run: |
+          # Check if there are changes to commit
+          if [[ -n $(git status -s data/) ]]; then
+            echo "Changes detected in data directory"
+            
+            # Configure git
+            git config user.name "VentureScout AI Bot"
+            git config user.email "bot@venturescout-ai.com"
+            
+            # Add and commit changes
+            git add data/
+            git commit -m "🤖 Auto-update: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+            
+            # Push changes
+            git push
+            echo "✅ Results committed and pushed"
+          else
+            echo "No changes to commit"
+          fi
+      
+      # Step 9: Generate summary
+      - name: Generate summary
+        if: always()
+        run: |
+          echo "## 📊 Daily Cycle Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Run Time:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check if the cycle completed
+          if [ "${{ steps.daily_cycle.outcome }}" == "success" ]; then
+            echo "✅ **Cycle Status:** Success" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **Cycle Status:** Completed with warnings/errors" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📈 Recent Activity" >> $GITHUB_STEP_SUMMARY
+          echo "Check the `data/memory.db` file for full results." >> $GITHUB_STEP_SUMMARY
+      
+      # Step 10: Upload logs (on failure)
+      - name: Upload logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-cycle-logs
+          path: |
+            data/
+            *.log
+          retention-days: 7
+
+# Workflow completion notification
+# The summary page will show the result

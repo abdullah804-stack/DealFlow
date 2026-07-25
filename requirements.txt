@@ -1,0 +1,11 @@
+groq
+openai
+fastapi
+uvicorn
+python-dotenv
+pydantic
+requests
+feedparser
+chromadb
+sentence-transformers
+apscheduler
