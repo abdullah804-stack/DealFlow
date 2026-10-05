@@ -724,7 +724,7 @@ if __name__ == "__main__":
     import sys
     
     print("\n" + "=" * 60)
-    print("VENTURESCOUT AI — SOURCE TESTS")
+    print("DealFlow — SOURCE TESTS")
     print("=" * 60)
     
     # Check arguments

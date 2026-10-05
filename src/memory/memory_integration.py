@@ -1,7 +1,7 @@
 # src/memory/memory_integration.py
 """
-Memory Integration — Unified interface for structured + vector memory.
 
+Memory Integration — Unified interface for structured memory (vector removed).
 Provides:
 - Single API for all memory operations
 - RAG utilities for chat
@@ -54,7 +54,7 @@ logger = logging.getLogger(__name__)
 
 class MemoryIntegration:
     """
-    Unified memory interface for VentureScout AI.
+    Unified memory interface for DealFlow.
     
     Combines structured (SQLite) and vector (ChromaDB) memory.
     """

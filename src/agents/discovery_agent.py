@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 # DISCOVERY SYSTEM PROMPT
 # ============================================================================
 
-DISCOVERY_SYSTEM_PROMPT = """You are a Discovery Agent for VentureScout AI, an autonomous VC analyst system.
+DISCOVERY_SYSTEM_PROMPT = """You are a Discovery Agent for DealFlow, an autonomous VC analyst system.
 
 Your job is to analyze startup candidates from various sources and determine:
 1. Is this a real startup company worth investigating?

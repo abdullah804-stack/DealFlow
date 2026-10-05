@@ -35,7 +35,7 @@ REQUIRED_FIELDS = [
     "summary",
 ]
 
-DOSSIER_SYSTEM_PROMPT = """You are a Dossier Builder for VentureScout AI.
+DOSSIER_SYSTEM_PROMPT = """You are a Dossier Builder for DealFlow.
 
 Your job is to extract structured information about a startup from raw text.
 

@@ -248,7 +248,7 @@ Provide a concise debate summary that covers:
 Keep it professional and concise (3-4 paragraphs).
 """
         
-        system_prompt = """You are the Moderator of the VentureScout AI Investment Committee.
+        system_prompt = """You are the Moderator of the DealFlow Investment Committee.
 
 Your job is to summarize the committee debate accurately and concisely.
 Capture the key arguments, the reasoning behind the decision, and the final verdict.

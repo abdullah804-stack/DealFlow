@@ -1,6 +1,7 @@
 # src/orchestration/daily_cycle.py
 """
-Daily Cycle Orchestration — Runs the full VentureScout AI pipeline.
+
+Daily Cycle Orchestration — Runs the full DealFlow pipeline.
 
 Executes:
 1. Discovery: Pull candidates from all sources
@@ -35,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 class DailyCycle:
     """
-    Orchestrates the full daily cycle of VentureScout AI.
+    Orchestrates the full daily cycle of DealFlow.
     """
     
     def __init__(self):
@@ -265,7 +266,7 @@ def run_daily_cycle_with_logging() -> Dict[str, Any]:
     Run the daily cycle with comprehensive logging.
     """
     logger.info("=" * 60)
-    logger.info("VENTURESCOUT AI — DAILY CYCLE")
+    logger.info("DEALFLOW — DAILY CYCLE")
     logger.info("=" * 60)
     
     start_time = datetime.utcnow()

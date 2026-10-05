@@ -26,8 +26,8 @@ from config.settings import REDDIT_SUBREDDITS
 # Reddit API configuration
 REDDIT_BASE_URL = "https://www.reddit.com"
 REDDIT_USER_AGENT = (
-    "Mozilla/5.0 (compatible; VentureScoutAI/1.0; "
-    "+https://github.com/yourusername/venturescout-ai)"
+    "Mozilla/5.0 (compatible; DealFlowBot/1.0; "
+    "+https://github.com/abdullah804-stack/DealFlow)"
 )
 
 # How many posts to fetch per subreddit

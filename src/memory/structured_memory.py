@@ -1,6 +1,6 @@
 # src/memory/structured_memory.py
 """
-Structured Memory — SQLite database layer for VentureScout AI.
+Structured Memory — SQLite database layer for DealFlow.
 
 Provides persistent storage for:
 - seen_candidates: All discovered candidates with deduplication

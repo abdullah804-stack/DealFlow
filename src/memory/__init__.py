@@ -1,6 +1,6 @@
 # src/memory/__init__.py
 """
-Memory Module — Structured and Vector Memory for VentureScout AI.
+Memory Module — Structured and Vector Memory for DealFlow.
 
 Provides:
 - Structured memory: SQLite database for candidates, dossiers, decisions

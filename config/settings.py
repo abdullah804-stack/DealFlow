@@ -1,8 +1,8 @@
 # config/settings.py
 """
-VentureScout AI — Configuration Constants
+DealFlow — Configuration Constants
 Single source of truth for all settings.
-All values locked per PROJECT_OUTLINE.md and VENTURESCOUT_MASTER_SPEC.md.
+All values locked per docs/legacy/PROJECT_OUTLINE.md and docs/legacy/VENTURESCOUT_MASTER_SPEC.md.
 """
 
 import os

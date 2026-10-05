@@ -2,7 +2,7 @@
 """
 Scheduler Entry Point — Runs the daily cycle.
 
-This is the main entry point for the VentureScout AI daily cycle.
+This is the main entry point for the DealFlow daily cycle.
 Can be run locally or via GitHub Actions.
 
 Usage:
@@ -129,7 +129,7 @@ def main():
     logger = setup_logging(args.verbose)
     
     logger.info("=" * 60)
-    logger.info("VENTURESCOUT AI — DAILY CYCLE SCHEDULER")
+    logger.info("DEALFLOW — DAILY CYCLE SCHEDULER")
     logger.info("=" * 60)
     logger.info(f"Start time: {datetime.utcnow().isoformat()}")
     
@@ -213,7 +213,7 @@ def github_actions_main():
     )
     logger = logging.getLogger(__name__)
     
-    logger.info("Running VentureScout AI daily cycle on GitHub Actions")
+    logger.info("Running DealFlow daily cycle on GitHub Actions")
     
     try:
         result = run_daily_cycle()

@@ -602,7 +602,7 @@ if __name__ == "__main__":
     import sys
     
     print("\n" + "=" * 60)
-    print("VENTURESCOUT AI — AGENT TESTS")
+    print("DealFlow — AGENT TESTS")
     print("=" * 60)
     
     if "--quick" in sys.argv:

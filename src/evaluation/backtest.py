@@ -285,7 +285,7 @@ if __name__ == "__main__":
     )
     
     print("\n" + "=" * 60)
-    print("VENTURESCOUT AI — BACKTEST")
+    print("DealFlow — BACKTEST")
     print("=" * 60)
     print("\n⚠️  This will run the full committee on 10 historical startups.")
     print("   Each startup will be evaluated as if it were a new candidate.")

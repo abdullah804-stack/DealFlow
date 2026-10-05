@@ -313,7 +313,7 @@ if __name__ == "__main__":
     try:
         print("Testing LLM client...")
         response = call_llm(
-            prompt="Say 'Hello, VentureScout!' in exactly 5 words.",
+            prompt="Say 'Hello, DealFlow!' in exactly 5 words.",
             system_prompt="You are a helpful assistant.",
             temperature=0.0,
             max_tokens=50,

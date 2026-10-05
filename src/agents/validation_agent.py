@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 # VALIDATION SYSTEM PROMPT
 # ============================================================================
 
-VALIDATION_SYSTEM_PROMPT = """You are a Validation Agent for VentureScout AI, an autonomous VC analyst system.
+VALIDATION_SYSTEM_PROMPT = """You are a Validation Agent for DealFlow, an autonomous VC analyst system.
 
 Your job is to refine the initial confidence scores of startup candidates and rank them by investment potential.
 
