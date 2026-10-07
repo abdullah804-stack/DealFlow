@@ -24,44 +24,45 @@ logger = logging.getLogger(__name__)
 # INVESTOR PERSONAS — Configuration
 # ============================================================================
 
+from config.settings import INVESTOR_WEIGHTS
+
 PERSONA_CONFIGS = {
     "technical": {
         "name": "Technical VC",
         "goal": "Determine defensible technical moat",
         "cares_about": "scalability, architecture, AI feasibility, competition",
-        "weight": 0.25,
+        "weight": INVESTOR_WEIGHTS["technical"],
         "tools": ["estimate_infra_cost"],
     },
     "finance": {
         "name": "Finance VC",
         "goal": "Determine business model profitability",
         "cares_about": "revenue, CAC, LTV, burn rate, TAM",
-        "weight": 0.25,
+        "weight": INVESTOR_WEIGHTS["finance"],
         "tools": ["estimate_tam"],
     },
     "marketing": {
         "name": "Marketing VC",
         "goal": "Determine real market demand/differentiation",
         "cares_about": "positioning, demand, differentiation",
-        "weight": 0.20,
+        "weight": INVESTOR_WEIGHTS["marketing"],
         "tools": ["competitor_search"],
     },
     "legal": {
         "name": "Legal VC",
         "goal": "Determine compliance/regulatory risk",
         "cares_about": "privacy, GDPR, copyright, regulation",
-        "weight": 0.10,
+        "weight": INVESTOR_WEIGHTS["legal"],
         "tools": ["compliance_checklist"],
     },
     "founder": {
         "name": "Serial Founder",
         "goal": "Determine execution feasibility",
         "cares_about": "MVP scope, hiring, execution speed",
-        "weight": 0.20,
+        "weight": INVESTOR_WEIGHTS["founder"],
         "tools": ["mvp_cost_estimator"],
     },
 }
-
 
 # ============================================================================
 # TOOL SIMULATIONS (LLM-based reasoning)
