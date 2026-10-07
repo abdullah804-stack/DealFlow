@@ -68,3 +68,198 @@ model VerificationToken {
   @@unique([identifier, token])
   @@map("verification_tokens")
 }
+
+
+// ═══════════════════════════════════════════════════════════════════
+// DISCOVERY TABLES — Phase 2
+// Written by Python (see SCHEDULED_JOBS.md). Do not rename or retype
+// columns without Python-side review.
+// ═══════════════════════════════════════════════════════════════════
+
+model DailyRun {
+  id              String   @id @default(cuid())
+  startedAt       DateTime @default(now())
+  completedAt     DateTime?
+  status          String   @default("running") // running | completed | failed
+  candidatesFound Int      @default(0)
+  candidatesValidated Int  @default(0)
+  candidatesEscalated Int  @default(0)
+  topPickId       String?
+  errorMessage    String?  @db.Text
+  llmCallCount    Int      @default(0)
+
+  candidates      Candidate[]
+  dossiers        Dossier[]
+  reports         Report[]
+  agentRunLogs    AgentRunLog[]
+
+  @@index([startedAt])
+  @@map("daily_runs")
+}
+
+model Candidate {
+  id                  String   @id @default(cuid())
+  canonicalKey        String   @unique
+  title               String
+  url                 String
+  source              String
+  rawText             String?  @db.Text
+  metadata            Json?
+  discoveryConfidence Float?
+  finalConfidence     Float?
+  validationReasoning String?  @db.Text
+  rank                Int?
+  isRealStartup       Boolean  @default(false)
+
+  firstSeen           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  dailyRunId          String?
+  dailyRun            DailyRun? @relation(fields: [dailyRunId], references: [id], onDelete: SetNull)
+
+  dossiers            Dossier[]
+  evidence            Evidence[]
+  assessments         AgentAssessment[]
+  decisions           CommitteeDecision[]
+  reports             Report[]
+
+  @@index([firstSeen])
+  @@index([source])
+  @@index([dailyRunId])
+  @@map("candidates")
+}
+
+model Dossier {
+  id           String   @id @default(cuid())
+  candidateId  String
+  dossierJson  Json
+  summary      String?  @db.Text
+  company      String?
+  industry     String?
+  technology   String?
+  competitors  Json?
+  fundingStatus String?
+  pricingModel String?
+  createdAt    DateTime @default(now())
+
+  candidate    Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  dailyRunId   String?
+  dailyRun     DailyRun? @relation(fields: [dailyRunId], references: [id], onDelete: SetNull)
+
+  decisions    CommitteeDecision[]
+  reports      Report[]
+
+  @@index([candidateId])
+  @@index([createdAt])
+  @@map("dossiers")
+}
+
+model Evidence {
+  id           String   @id @default(cuid())
+  candidateId  String
+  claim        String   @db.Text
+  sourceUrl    String?
+  sourceType   String?
+  supportLevel String?
+  createdAt    DateTime @default(now())
+
+  candidate    Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+  @@map("evidence")
+}
+
+model AgentAssessment {
+  id           String   @id @default(cuid())
+  candidateId  String
+  agentType    String   // technical | finance | marketing | legal | founder
+  round        Int      @default(1)
+  score        Float
+  confidence   Float?
+  summary      String?  @db.Text
+  strengths    Json?
+  weaknesses   Json?
+  risks        Json?
+  assumptions  Json?
+  unknowns     Json?
+  recommendedActions Json?
+  evidenceIds  Json?
+  createdAt    DateTime @default(now())
+
+  candidate    Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+  @@index([agentType])
+  @@map("agent_assessments")
+}
+
+model CommitteeDecision {
+  id             String   @id @default(cuid())
+  candidateId    String
+  dossierId      String
+  decision       String   // INVEST | PASS | INSUFFICIENT_EVIDENCE
+  weightedScore  Float
+  fastPath       String?
+  rubricVersion  String   @default("1.0")
+  round1Opinions Json?
+  round2Opinions Json?
+  debateSummary  String?  @db.Text
+  roundComparison Json?
+  createdAt      DateTime @default(now())
+
+  candidate      Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  dossier        Dossier   @relation(fields: [dossierId], references: [id], onDelete: Cascade)
+
+  reports        Report[]
+
+  @@index([candidateId])
+  @@index([dossierId])
+  @@index([decision])
+  @@map("committee_decisions")
+}
+
+model Report {
+  id              String   @id @default(cuid())
+  candidateId     String?
+  dossierId       String?
+  decisionId      String?
+  dailyRunId      String?
+  subjectType     String   @default("candidate") // candidate | idea_evaluation
+  schemaVersion   String   @default("1.0")
+  reportJson      Json
+  contentHash     String?  @unique
+  pdfBlobUrl      String?
+  company         String?
+  decision        String?
+  weightedScore   Float?
+  starRating      Int?
+  createdAt       DateTime @default(now())
+
+  candidate       Candidate? @relation(fields: [candidateId], references: [id], onDelete: SetNull)
+  dossier         Dossier?   @relation(fields: [dossierId], references: [id], onDelete: SetNull)
+  decision_rel    CommitteeDecision? @relation(fields: [decisionId], references: [id], onDelete: SetNull)
+  dailyRun        DailyRun?  @relation(fields: [dailyRunId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([subjectType])
+  @@map("reports")
+}
+
+model AgentRunLog {
+  id           String   @id @default(cuid())
+  dailyRunId   String?
+  agentType    String
+  modelName    String
+  promptTokens Int      @default(0)
+  outputTokens Int      @default(0)
+  durationMs   Int      @default(0)
+  status       String   @default("ok") // ok | failed_retryable | failed_fatal
+  errorMessage String?  @db.Text
+  createdAt    DateTime @default(now())
+
+  dailyRun     DailyRun? @relation(fields: [dailyRunId], references: [id], onDelete: SetNull)
+
+  @@index([dailyRunId])
+  @@index([createdAt])
+  @@map("agent_run_logs")
+}
