@@ -157,14 +157,40 @@ def _call_openai_compatible(
     
     for attempt in range(retries + 1):
         try:
-            # Build request arguments
+                        # Build request arguments
+            # Groq requires the literal substring "json" in the messages
+            # whenever response_format={"type": "json_object"} is used.
+            # We defensively append a hint to guarantee compliance.
+            safe_messages = list(messages)
+            if response_format and response_format.get("type") == "json_object":
+                hint = "Respond with valid json only."
+                if safe_messages and safe_messages[0].get("role") == "system":
+                    if "json" not in safe_messages[0]["content"].lower():
+                        safe_messages[0] = {
+                            "role": "system",
+                            "content": safe_messages[0]["content"].rstrip()
+                            + "\n\n"
+                            + hint,
+                        }
+                else:
+                    safe_messages.insert(
+                        0, {"role": "system", "content": hint}
+                    )
+                # Double-check the last user message mentions json too
+                if safe_messages and "json" not in safe_messages[-1]["content"].lower():
+                    safe_messages[-1] = {
+                        "role": safe_messages[-1]["role"],
+                        "content": safe_messages[-1]["content"].rstrip()
+                        + "\n\nRespond with valid json only.",
+                    }
+
             kwargs = {
                 "model": model,
-                "messages": messages,
+                "messages": safe_messages,
                 "temperature": temperature,
                 "max_tokens": max_tokens,
             }
-            
+
             # Add response_format for JSON mode if requested
             if response_format and response_format.get("type") == "json_object":
                 kwargs["response_format"] = response_format

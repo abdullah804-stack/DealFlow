@@ -66,14 +66,17 @@ LLM_PROVIDER_FALLBACK = "openrouter"
 
 # Groq
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-GROQ_MODEL = "llama-3.3-70b-versatile"
+GROQ_MODEL = "qwen/qwen3.8-27b"
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 
 # OpenRouter (fallback)
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
-OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
+OPENROUTER_MODEL = "nvidia/nemotron-3-super-120b-a12b:free"
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
+# Interview turn generator — lighter/faster model
+GROQ_INTERVIEW_MODEL = "qwen/qwen3.8-27b"
+OPENROUTER_INTERVIEW_MODEL = "inclusionai/ling-3.0-flash-sante:free"
 # ============================================================================
 # DATABASE
 # ============================================================================
