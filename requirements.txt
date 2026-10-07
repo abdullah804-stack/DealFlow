@@ -5,3 +5,4 @@ pydantic
 requests
 feedparser
 psycopg[binary]
+pytest
