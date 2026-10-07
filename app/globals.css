@@ -243,6 +243,32 @@ input {
   color: var(--color-text-low);
 }
 
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--color-text-mid);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.nav-item:hover {
+  background: var(--color-panel);
+  color: var(--color-text-hi);
+}
+.nav-item .nav-ico {
+  color: var(--color-text-low);
+  font-size: 13px;
+  width: 16px;
+  text-align: center;
+}
+.nav-item:hover .nav-ico {
+  color: var(--color-teal);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
