@@ -16,8 +16,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 DATA_DIR.mkdir(exist_ok=True)
 
-SQLITE_PATH = DATA_DIR / "memory.db"
-CHROMA_PATH = str(DATA_DIR / "chroma_db")
+# SQLite and ChromaDB paths were removed in Phase 2. Storage is Postgres.
 
 # ============================================================================
 # DISCOVERY SOURCES
@@ -75,6 +74,12 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
+# ============================================================================
+# DATABASE
+# ============================================================================
+
+DATABASE_URL = os.getenv("DATABASE_URL", "")
+
 # LLM temperature and max tokens
 LLM_TEMPERATURE = 0.7
 LLM_MAX_TOKENS = 2048
@@ -118,12 +123,14 @@ def validate_config():
         raise ValueError("GROQ_API_KEY environment variable is not set.")
     if not OPENROUTER_API_KEY:
         raise ValueError("OPENROUTER_API_KEY environment variable is not set.")
-    
+    if not DATABASE_URL:
+        raise ValueError("DATABASE_URL environment variable is not set.")
+
     # Ensure weights sum to 1.0
     total_weight = sum(INVESTOR_WEIGHTS.values())
     if abs(total_weight - 1.0) > 0.001:
         raise ValueError(f"INVESTOR_WEIGHTS must sum to 1.0. Current: {total_weight}")
-    
+
     # Ensure daily cap is respected
     if MAX_CANDIDATES_FULL_COMMITTEE_PER_DAY > 3:
         raise ValueError(
