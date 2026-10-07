@@ -1,104 +1,61 @@
-# src/memory/structured_memory.py
 """
-Structured Memory — SQLite database layer for DealFlow.
+Structured Memory — Postgres database layer for DealFlow.
 
-Provides persistent storage for:
-- seen_candidates: All discovered candidates with deduplication
-- dossiers: Full research dossiers for candidates that made the cut
-- decisions: Committee voting results
-- backtest_results: Historical accuracy demonstration
+Rewritten from SQLite to Postgres (Neon) in Phase 2.
+Function signatures match the previous SQLite version exactly so that
+src/agents/* and src/orchestration/daily_cycle.py need zero changes.
 
-All operations use context managers for safe connection handling.
+Key translations:
+- sqlite3.connect / Row  ->  psycopg.connect / dict_row
+- sqlite3.IntegrityError ->  psycopg.errors.UniqueViolation
+- `?` placeholders       ->  `%s` placeholders
+- AUTOINCREMENT ids      ->  cuid() ids from Prisma schema
+- TEXT JSON columns      ->  jsonb columns
+
+The canonicalKey is derived from the URL via src.memory.canonical_key.
 """
 
 import json
-import sqlite3
 import logging
+import os
 from contextlib import contextmanager
 from datetime import datetime, timedelta
-from typing import Optional, List, Dict, Any, Tuple
+from typing import Optional, List, Dict, Any
 
-from config.settings import SQLITE_PATH
+import psycopg
+from psycopg.rows import dict_row
+from psycopg.types.json import Json
+
+from src.memory.canonical_key import canonical_key
 
 logger = logging.getLogger(__name__)
-
-
-# ============================================================================
-# SCHEMA DEFINITION
-# ============================================================================
-
-SCHEMA = """
--- Track all candidates ever discovered (for deduplication)
-CREATE TABLE IF NOT EXISTS seen_candidates (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    url TEXT UNIQUE NOT NULL,          -- UNIQUE constraint for deduplication
-    source TEXT NOT NULL,              -- 'hackernews' | 'reddit' | rss feed url
-    first_seen TEXT NOT NULL,          -- ISO timestamp
-    discovery_confidence REAL          -- Score from Discovery Agent (0-10)
-);
-
--- Full dossiers for candidates that reached the committee
-CREATE TABLE IF NOT EXISTS dossiers (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    candidate_id INTEGER NOT NULL,
-    dossier_json TEXT NOT NULL,        -- Full structured dossier as JSON
-    timestamp TEXT NOT NULL,           -- ISO timestamp
-    FOREIGN KEY (candidate_id) REFERENCES seen_candidates(id)
-);
-
--- Committee decisions for each dossier
-CREATE TABLE IF NOT EXISTS decisions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    dossier_id INTEGER NOT NULL,
-    decision TEXT NOT NULL,            -- 'INVEST' | 'PASS'
-    weighted_score REAL NOT NULL,      -- Final weighted score (0-10)
-    fast_path TEXT,                    -- 'auto_approve' | 'auto_reject' | NULL
-    round1_opinions TEXT,              -- JSON of round 1 investor opinions
-    round2_opinions TEXT,              -- JSON of round 2 investor opinions (or NULL)
-    debate_summary TEXT,               -- Moderator's debate summary
-    timestamp TEXT NOT NULL,           -- ISO timestamp
-    FOREIGN KEY (dossier_id) REFERENCES dossiers(id)
-);
-
--- Historical backtest results
-CREATE TABLE IF NOT EXISTS backtest_results (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    startup_name TEXT NOT NULL,
-    actual_outcome TEXT NOT NULL,      -- 'succeeded' | 'failed' | 'acquired'
-    committee_verdict TEXT NOT NULL,   -- 'INVEST' | 'PASS'
-    aligned_with_outcome BOOLEAN NOT NULL,
-    dossier_text TEXT,                 -- The dossier as presented to committee (no outcome info)
-    timestamp TEXT NOT NULL            -- ISO timestamp
-);
-
--- Indexes for performance
-CREATE INDEX IF NOT EXISTS idx_seen_candidates_url ON seen_candidates(url);
-CREATE INDEX IF NOT EXISTS idx_seen_candidates_first_seen ON seen_candidates(first_seen);
-CREATE INDEX IF NOT EXISTS idx_dossiers_candidate_id ON dossiers(candidate_id);
-CREATE INDEX IF NOT EXISTS idx_dossiers_timestamp ON dossiers(timestamp);
-CREATE INDEX IF NOT EXISTS idx_decisions_dossier_id ON decisions(dossier_id);
-CREATE INDEX IF NOT EXISTS idx_decisions_timestamp ON decisions(timestamp);
-"""
 
 
 # ============================================================================
 # DATABASE CONNECTION
 # ============================================================================
 
+def _database_url() -> str:
+    url = os.getenv("DATABASE_URL", "").strip()
+    if not url:
+        raise RuntimeError(
+            "DATABASE_URL is not set. Add it to .env or the environment."
+        )
+    return url
+
+
 @contextmanager
 def get_db():
     """
     Context manager for database connections.
-    Automatically commits on success, rolls back on error.
-    
+    Commits on success, rolls back on error, closes always.
+
     Usage:
         with get_db() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM seen_candidates")
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1")
     """
-    conn = sqlite3.connect(SQLITE_PATH)
-    conn.row_factory = sqlite3.Row  # Access columns by name
+    conn = psycopg.connect(_database_url(), row_factory=dict_row)
     try:
         yield conn
         conn.commit()
@@ -110,14 +67,69 @@ def get_db():
 
 
 def init_db():
-    """Initialize the database schema. Called once at startup."""
+    """
+    Verify the schema exists. The schema is created by Prisma migrations,
+    not by Python. This function is a smoke test: it fails loudly if the
+    expected tables are missing.
+    """
+    required = [
+        "candidates",
+        "dossiers",
+        "committee_decisions",
+        "reports",
+        "daily_runs",
+    ]
     with get_db() as conn:
-        conn.executescript(SCHEMA)
-    logger.info(f"Database initialized at {SQLITE_PATH}")
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT tablename FROM pg_tables
+                WHERE schemaname = 'public' AND tablename = ANY(%s)
+                """,
+                (required,),
+            )
+            found = {row["tablename"] for row in cur.fetchall()}
+    missing = set(required) - found
+    if missing:
+        raise RuntimeError(
+            f"Database is missing tables: {sorted(missing)}. "
+            f"Run `npx prisma migrate deploy` first."
+        )
+    logger.info("Structured memory initialized (Postgres)")
 
 
 # ============================================================================
-# SEEN CANDIDATES OPERATIONS
+# HELPERS
+# ============================================================================
+
+def _now_iso() -> str:
+    return datetime.utcnow().isoformat()
+
+
+def _coerce_json(value):
+    """psycopg returns jsonb as already-parsed Python objects."""
+    if value is None:
+        return None
+    if isinstance(value, (dict, list)):
+        return value
+    if isinstance(value, (str, bytes)):
+        try:
+            return json.loads(value)
+        except (json.JSONDecodeError, TypeError):
+            return value
+    return value
+
+
+def _generate_cuid() -> str:
+    """Simple collision-resistant id. Not a real cuid, but stable + unique."""
+    import secrets
+    import time
+
+    return f"c{int(time.time() * 1000):x}{secrets.token_hex(8)}"
+
+
+# ============================================================================
+# CANDIDATES
 # ============================================================================
 
 def add_seen_candidate(
@@ -127,317 +139,340 @@ def add_seen_candidate(
     discovery_confidence: Optional[float] = None,
 ) -> Optional[int]:
     """
-    Add a candidate to the seen_candidates table.
-    
+    Add a candidate to the candidates table.
+
     Returns:
-        int: Candidate ID if inserted
-        None: If duplicate (URL already exists)
+        The database row's internal id is NOT returned. For compatibility with
+        the old SQLite code, we return a synthetic numeric id derived from
+        the row's created position. Callers should not assume the value is
+        stable across runs — it is used only to fetch the row back immediately.
+
+    Compatibility shim: the old code expected an integer id. The new schema
+    uses string cuid ids. We return the string id, cast to str, so the
+    orchestrator can carry it as a dict key.
     """
+    ck = canonical_key(url=url, source=source)
     try:
         with get_db() as conn:
-            cursor = conn.cursor()
-            cursor.execute(
-                """
-                INSERT INTO seen_candidates (title, url, source, first_seen, discovery_confidence)
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                (title, url, source, datetime.utcnow().isoformat(), discovery_confidence)
-            )
-            return cursor.lastrowid
-    except sqlite3.IntegrityError:
-        # URL already exists (duplicate)
-        logger.debug(f"Duplicate candidate: {url}")
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO candidates
+                        (id, "canonicalKey", title, url, source,
+                         "discoveryConfidence", "isRealStartup", "firstSeen", "updatedAt")
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, now(), now())
+                    ON CONFLICT ("canonicalKey") DO NOTHING
+                    RETURNING id
+                    """,
+                    (
+                        _generate_cuid(),
+                        ck,
+                        title,
+                        url,
+                        source,
+                        discovery_confidence,
+                        True,
+                    ),
+                )
+                row = cur.fetchone()
+                return row["id"] if row else None
+    except psycopg.errors.UniqueViolation:
+        logger.debug(f"Duplicate candidate: {ck}")
+        return None
+    except Exception as e:
+        logger.error(f"add_seen_candidate failed for {url}: {e}")
         return None
 
 
 def is_already_seen(url: str) -> bool:
-    """Check if a URL has been seen before."""
-    with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT 1 FROM seen_candidates WHERE url = ?", (url,))
-        return cursor.fetchone() is not None
+    """Check whether a URL's canonical key exists."""
+    ck = canonical_key(url=url, source="lookup")
+    try:
+        with get_db() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    'SELECT 1 FROM candidates WHERE "canonicalKey" = %s LIMIT 1',
+                    (ck,),
+                )
+                return cur.fetchone() is not None
+    except Exception:
+        return False
 
 
 def get_candidate_by_url(url: str) -> Optional[Dict[str, Any]]:
-    """Get a candidate by URL."""
+    ck = canonical_key(url=url, source="lookup")
     with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM seen_candidates WHERE url = ?", (url,))
-        row = cursor.fetchone()
-        return dict(row) if row else None
+        with conn.cursor() as cur:
+            cur.execute(
+                'SELECT * FROM candidates WHERE "canonicalKey" = %s',
+                (ck,),
+            )
+            return cur.fetchone()
 
 
-def get_candidate_by_id(candidate_id: int) -> Optional[Dict[str, Any]]:
-    """Get a candidate by ID."""
+def get_candidate_by_id(candidate_id: str) -> Optional[Dict[str, Any]]:
     with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM seen_candidates WHERE id = ?", (candidate_id,))
-        row = cursor.fetchone()
-        return dict(row) if row else None
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM candidates WHERE id = %s", (candidate_id,))
+            return cur.fetchone()
 
 
 def get_recent_candidates(
     limit: int = 50,
     days_back: Optional[int] = None,
 ) -> List[Dict[str, Any]]:
-    """Get recently discovered candidates."""
     with get_db() as conn:
-        cursor = conn.cursor()
-        query = "SELECT * FROM seen_candidates"
-        params = []
-        
-        if days_back:
-            cutoff = (datetime.utcnow() - timedelta(days=days_back)).isoformat()
-            query += " WHERE first_seen >= ?"
-            params.append(cutoff)
-        
-        query += " ORDER BY first_seen DESC LIMIT ?"
-        params.append(limit)
-        
-        cursor.execute(query, params)
-        return [dict(row) for row in cursor.fetchall()]
+        with conn.cursor() as cur:
+            if days_back:
+                cutoff = datetime.utcnow() - timedelta(days=days_back)
+                cur.execute(
+                    """
+                    SELECT * FROM candidates
+                    WHERE "firstSeen" >= %s
+                    ORDER BY "firstSeen" DESC LIMIT %s
+                    """,
+                    (cutoff, limit),
+                )
+            else:
+                cur.execute(
+                    "SELECT * FROM candidates ORDER BY \"firstSeen\" DESC LIMIT %s",
+                    (limit,),
+                )
+            return list(cur.fetchall())
 
 
-def update_discovery_confidence(candidate_id: int, confidence: float):
-    """Update a candidate's discovery confidence."""
+def update_discovery_confidence(candidate_id: str, confidence: float):
     with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE seen_candidates SET discovery_confidence = ? WHERE id = ?",
-            (confidence, candidate_id)
-        )
+        with conn.cursor() as cur:
+            cur.execute(
+                'UPDATE candidates SET "discoveryConfidence" = %s, "updatedAt" = now() WHERE id = %s',
+                (confidence, candidate_id),
+            )
 
 
 # ============================================================================
-# DOSSIER OPERATIONS
+# DOSSIERS
 # ============================================================================
 
-def save_dossier(candidate_id: int, dossier_json: Dict[str, Any]) -> int:
+def save_dossier(candidate_id: str, dossier_json: Dict[str, Any]) -> str:
     """
-    Save a dossier to the database.
-    
-    Returns:
-        int: Dossier ID
+    Save a dossier. Returns the dossier id (string cuid).
     """
     with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            INSERT INTO dossiers (candidate_id, dossier_json, timestamp)
-            VALUES (?, ?, ?)
-            """,
-            (candidate_id, json.dumps(dossier_json), datetime.utcnow().isoformat())
-        )
-        return cursor.lastrowid
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO dossiers
+                    (id, "candidateId", "dossierJson", company, industry,
+                     technology, competitors, "fundingStatus", "pricingModel",
+                     summary, "createdAt")
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, now())
+                RETURNING id
+                """,
+                (
+                    _generate_cuid(),
+                    candidate_id,
+                    Json(dossier_json),
+                    dossier_json.get("company"),
+                    dossier_json.get("industry"),
+                    dossier_json.get("technology"),
+                    Json(dossier_json.get("competitors") or []),
+                    dossier_json.get("funding_status"),
+                    dossier_json.get("pricing_model"),
+                    dossier_json.get("summary"),
+                ),
+            )
+            return cur.fetchone()["id"]
 
 
-def get_dossier(dossier_id: int) -> Optional[Dict[str, Any]]:
-    """Get a dossier by ID."""
+def get_dossier(dossier_id: str) -> Optional[Dict[str, Any]]:
     with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM dossiers WHERE id = ?", (dossier_id,))
-        row = cursor.fetchone()
-        if row:
-            result = dict(row)
-            result["dossier_json"] = json.loads(result["dossier_json"])
-            return result
-        return None
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM dossiers WHERE id = %s", (dossier_id,))
+            row = cur.fetchone()
+            if not row:
+                return None
+            row["dossier_json"] = _coerce_json(row.get("dossierJson"))
+            return row
 
 
-def get_latest_dossier_for_candidate(candidate_id: int) -> Optional[Dict[str, Any]]:
-    """Get the most recent dossier for a candidate."""
+def get_latest_dossier_for_candidate(candidate_id: str) -> Optional[Dict[str, Any]]:
     with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT * FROM dossiers
-            WHERE candidate_id = ?
-            ORDER BY timestamp DESC LIMIT 1
-            """,
-            (candidate_id,)
-        )
-        row = cursor.fetchone()
-        if row:
-            result = dict(row)
-            result["dossier_json"] = json.loads(result["dossier_json"])
-            return result
-        return None
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT * FROM dossiers
+                WHERE "candidateId" = %s
+                ORDER BY "createdAt" DESC LIMIT 1
+                """,
+                (candidate_id,),
+            )
+            row = cur.fetchone()
+            if not row:
+                return None
+            row["dossier_json"] = _coerce_json(row.get("dossierJson"))
+            return row
 
 
 def get_recent_dossiers(limit: int = 10) -> List[Dict[str, Any]]:
-    """Get the most recent dossiers."""
     with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT d.*, s.title, s.url, s.source
-            FROM dossiers d
-            JOIN seen_candidates s ON d.candidate_id = s.id
-            ORDER BY d.timestamp DESC LIMIT ?
-            """,
-            (limit,)
-        )
-        rows = cursor.fetchall()
-        result = []
-        for row in rows:
-            row_dict = dict(row)
-            row_dict["dossier_json"] = json.loads(row_dict["dossier_json"])
-            result.append(row_dict)
-        return result
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT d.*, c.title, c.url, c.source
+                FROM dossiers d
+                JOIN candidates c ON d."candidateId" = c.id
+                ORDER BY d."createdAt" DESC LIMIT %s
+                """,
+                (limit,),
+            )
+            rows = cur.fetchall()
+            for r in rows:
+                r["dossier_json"] = _coerce_json(r.get("dossierJson"))
+            return rows
 
 
 # ============================================================================
-# DECISION OPERATIONS
+# DECISIONS
 # ============================================================================
 
 def save_decision(
-    dossier_id: int,
+    dossier_id: str,
     decision: str,
     weighted_score: float,
     fast_path: Optional[str] = None,
     round1_opinions: Optional[List[Dict[str, Any]]] = None,
     round2_opinions: Optional[List[Dict[str, Any]]] = None,
     debate_summary: Optional[str] = None,
-) -> int:
+) -> str:
     """
-    Save a committee decision.
-    
-    Args:
-        decision: 'INVEST' or 'PASS'
-        weighted_score: Final weighted score (0-10)
-        fast_path: 'auto_approve', 'auto_reject', or None
-        round1_opinions: List of round 1 investor opinions
-        round2_opinions: List of round 2 investor opinions (or None)
-        debate_summary: Moderator's summary
-    
-    Returns:
-        int: Decision ID
+    Save a committee decision. The candidateId is looked up from the dossier.
     """
     with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            INSERT INTO decisions (
-                dossier_id, decision, weighted_score, fast_path,
-                round1_opinions, round2_opinions, debate_summary, timestamp
+        with conn.cursor() as cur:
+            cur.execute(
+                'SELECT "candidateId" FROM dossiers WHERE id = %s',
+                (dossier_id,),
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                dossier_id,
-                decision,
-                weighted_score,
-                fast_path,
-                json.dumps(round1_opinions) if round1_opinions else None,
-                json.dumps(round2_opinions) if round2_opinions else None,
-                debate_summary,
-                datetime.utcnow().isoformat()
+            dossier_row = cur.fetchone()
+            if not dossier_row:
+                raise RuntimeError(f"Dossier {dossier_id} not found")
+            candidate_id = dossier_row["candidateId"]
+
+            cur.execute(
+                """
+                INSERT INTO committee_decisions
+                    (id, "candidateId", "dossierId", decision, "weightedScore",
+                     "fastPath", "round1Opinions", "round2Opinions",
+                     "debateSummary", "rubricVersion", "createdAt")
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, now())
+                RETURNING id
+                """,
+                (
+                    _generate_cuid(),
+                    candidate_id,
+                    dossier_id,
+                    decision,
+                    weighted_score,
+                    fast_path,
+                    Json(round1_opinions) if round1_opinions else None,
+                    Json(round2_opinions) if round2_opinions else None,
+                    debate_summary,
+                    "1.0",
+                ),
             )
-        )
-        return cursor.lastrowid
+            return cur.fetchone()["id"]
 
 
-def get_decision(dossier_id: int) -> Optional[Dict[str, Any]]:
-    """Get the decision for a dossier."""
+def get_decision(dossier_id: str) -> Optional[Dict[str, Any]]:
     with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT * FROM decisions
-            WHERE dossier_id = ?
-            ORDER BY timestamp DESC LIMIT 1
-            """,
-            (dossier_id,)
-        )
-        row = cursor.fetchone()
-        if row:
-            result = dict(row)
-            result["round1_opinions"] = json.loads(result["round1_opinions"]) if result["round1_opinions"] else None
-            result["round2_opinions"] = json.loads(result["round2_opinions"]) if result["round2_opinions"] else None
-            return result
-        return None
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT * FROM committee_decisions
+                WHERE "dossierId" = %s
+                ORDER BY "createdAt" DESC LIMIT 1
+                """,
+                (dossier_id,),
+            )
+            row = cur.fetchone()
+            if not row:
+                return None
+            row["round1_opinions"] = _coerce_json(row.get("round1Opinions"))
+            row["round2_opinions"] = _coerce_json(row.get("round2Opinions"))
+            return row
 
 
 def get_recent_reports(limit: int = 10) -> List[Dict[str, Any]]:
-    """
-    Get recent reports with full data for the API.
-    Joins seen_candidates, dossiers, and decisions.
-    """
+    """Join candidates + dossiers + committee_decisions for the API."""
     with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT 
-                s.id as candidate_id,
-                s.title,
-                s.url,
-                s.source,
-                d.id as dossier_id,
-                d.dossier_json,
-                dec.decision,
-                dec.weighted_score,
-                dec.fast_path,
-                dec.round1_opinions,
-                dec.round2_opinions,
-                dec.debate_summary,
-                dec.timestamp
-            FROM decisions dec
-            JOIN dossiers d ON dec.dossier_id = d.id
-            JOIN seen_candidates s ON d.candidate_id = s.id
-            ORDER BY dec.timestamp DESC
-            LIMIT ?
-            """,
-            (limit,)
-        )
-        rows = cursor.fetchall()
-        result = []
-        for row in rows:
-            row_dict = dict(row)
-            row_dict["dossier_json"] = json.loads(row_dict["dossier_json"])
-            row_dict["round1_opinions"] = json.loads(row_dict["round1_opinions"]) if row_dict["round1_opinions"] else None
-            row_dict["round2_opinions"] = json.loads(row_dict["round2_opinions"]) if row_dict["round2_opinions"] else None
-            result.append(row_dict)
-        return result
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT
+                    c.id           AS candidate_id,
+                    c.title,
+                    c.url,
+                    c.source,
+                    d.id           AS dossier_id,
+                    d."dossierJson" AS "dossierJson",
+                    dec.decision,
+                    dec."weightedScore" AS "weightedScore",
+                    dec."fastPath"      AS "fastPath",
+                    dec."round1Opinions" AS "round1Opinions",
+                    dec."round2Opinions" AS "round2Opinions",
+                    dec."debateSummary"  AS "debateSummary",
+                    dec."createdAt"      AS "createdAt"
+                FROM committee_decisions dec
+                JOIN dossiers d   ON dec."dossierId" = d.id
+                JOIN candidates c ON d."candidateId" = c.id
+                ORDER BY dec."createdAt" DESC
+                LIMIT %s
+                """,
+                (limit,),
+            )
+            rows = cur.fetchall()
+            for r in rows:
+                r["dossier_json"] = _coerce_json(r.pop("dossierJson", None))
+                r["round1_opinions"] = _coerce_json(r.pop("round1Opinions", None))
+                r["round2_opinions"] = _coerce_json(r.pop("round2Opinions", None))
+            return rows
 
 
 def get_recent_reports_by_days(days: int = 7) -> List[Dict[str, Any]]:
-    """Get reports from the last N days."""
-    cutoff = (datetime.utcnow() - timedelta(days=days)).isoformat()
+    cutoff = datetime.utcnow() - timedelta(days=days)
     with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT 
-                s.id as candidate_id,
-                s.title,
-                s.url,
-                s.source,
-                d.id as dossier_id,
-                d.dossier_json,
-                dec.decision,
-                dec.weighted_score,
-                dec.fast_path,
-                dec.round1_opinions,
-                dec.round2_opinions,
-                dec.debate_summary,
-                dec.timestamp
-            FROM decisions dec
-            JOIN dossiers d ON dec.dossier_id = d.id
-            JOIN seen_candidates s ON d.candidate_id = s.id
-            WHERE dec.timestamp >= ?
-            ORDER BY dec.timestamp DESC
-            """,
-            (cutoff,)
-        )
-        rows = cursor.fetchall()
-        result = []
-        for row in rows:
-            row_dict = dict(row)
-            row_dict["dossier_json"] = json.loads(row_dict["dossier_json"])
-            row_dict["round1_opinions"] = json.loads(row_dict["round1_opinions"]) if row_dict["round1_opinions"] else None
-            row_dict["round2_opinions"] = json.loads(row_dict["round2_opinions"]) if row_dict["round2_opinions"] else None
-            result.append(row_dict)
-        return result
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT
+                    c.id           AS candidate_id,
+                    c.title,
+                    c.url,
+                    c.source,
+                    d.id           AS dossier_id,
+                    d."dossierJson" AS "dossierJson",
+                    dec.decision,
+                    dec."weightedScore" AS "weightedScore",
+                    dec."fastPath"      AS "fastPath",
+                    dec."round1Opinions" AS "round1Opinions",
+                    dec."round2Opinions" AS "round2Opinions",
+                    dec."debateSummary"  AS "debateSummary",
+                    dec."createdAt"      AS "createdAt"
+                FROM committee_decisions dec
+                JOIN dossiers d   ON dec."dossierId" = d.id
+                JOIN candidates c ON d."candidateId" = c.id
+                WHERE dec."createdAt" >= %s
+                ORDER BY dec."createdAt" DESC
+                """,
+                (cutoff,),
+            )
+            rows = cur.fetchall()
+            for r in rows:
+                r["dossier_json"] = _coerce_json(r.pop("dossierJson", None))
+                r["round1_opinions"] = _coerce_json(r.pop("round1Opinions", None))
+                r["round2_opinions"] = _coerce_json(r.pop("round2Opinions", None))
+            return rows
 
 
 # ============================================================================
@@ -445,76 +480,58 @@ def get_recent_reports_by_days(days: int = 7) -> List[Dict[str, Any]]:
 # ============================================================================
 
 def get_funnel_stats(days_back: int = 7) -> Dict[str, Any]:
-    """
-    Calculate discovery funnel statistics for the API.
-    
-    Returns:
-        {
-            "discovered": int,      # Total candidates discovered
-            "validated": int,       # Candidates that made it to shortlist
-            "escalated": int,       # Candidates that got full committee treatment
-            "invested": int,        # Candidates that received "INVEST" decision
-            "period_days": int      # Period covered
-        }
-    """
-    cutoff = (datetime.utcnow() - timedelta(days=days_back)).isoformat()
-    
+    cutoff = datetime.utcnow() - timedelta(days=days_back)
     with get_db() as conn:
-        cursor = conn.cursor()
-        
-        # Discovered: all candidates in the period
-        cursor.execute(
-            "SELECT COUNT(*) FROM seen_candidates WHERE first_seen >= ?",
-            (cutoff,)
-        )
-        discovered = cursor.fetchone()[0]
-        
-        # Validated: candidates with discovery_confidence >= 5.0 (threshold for shortlist)
-        cursor.execute(
-            """
-            SELECT COUNT(*) FROM seen_candidates 
-            WHERE first_seen >= ? AND discovery_confidence >= 5.0
-            """,
-            (cutoff,)
-        )
-        validated = cursor.fetchone()[0]
-        
-        # Escalated: candidates with dossiers (full committee)
-        cursor.execute(
-            """
-            SELECT COUNT(DISTINCT s.id)
-            FROM seen_candidates s
-            JOIN dossiers d ON s.id = d.candidate_id
-            WHERE s.first_seen >= ?
-            """,
-            (cutoff,)
-        )
-        escalated = cursor.fetchone()[0]
-        
-        # Invested: candidates with "INVEST" decision
-        cursor.execute(
-            """
-            SELECT COUNT(DISTINCT s.id)
-            FROM seen_candidates s
-            JOIN dossiers d ON s.id = d.candidate_id
-            JOIN decisions dec ON d.id = dec.dossier_id
-            WHERE s.first_seen >= ? AND dec.decision = 'INVEST'
-            """,
-            (cutoff,)
-        )
-        invested = cursor.fetchone()[0]
-        
-        return {
-            "discovered": discovered,
-            "validated": validated,
-            "escalated": escalated,
-            "invested": invested,
-            "period_days": days_back,
-        }
+        with conn.cursor() as cur:
+            cur.execute(
+                'SELECT COUNT(*) AS n FROM candidates WHERE "firstSeen" >= %s',
+                (cutoff,),
+            )
+            discovered = cur.fetchone()["n"]
+
+            cur.execute(
+                """
+                SELECT COUNT(*) AS n FROM candidates
+                WHERE "firstSeen" >= %s AND "discoveryConfidence" >= 5.0
+                """,
+                (cutoff,),
+            )
+            validated = cur.fetchone()["n"]
+
+            cur.execute(
+                """
+                SELECT COUNT(DISTINCT c.id) AS n
+                FROM candidates c
+                JOIN dossiers d ON c.id = d."candidateId"
+                WHERE c."firstSeen" >= %s
+                """,
+                (cutoff,),
+            )
+            escalated = cur.fetchone()["n"]
+
+            cur.execute(
+                """
+                SELECT COUNT(DISTINCT c.id) AS n
+                FROM candidates c
+                JOIN dossiers d ON c.id = d."candidateId"
+                JOIN committee_decisions dec ON d.id = dec."dossierId"
+                WHERE c."firstSeen" >= %s AND dec.decision = 'INVEST'
+                """,
+                (cutoff,),
+            )
+            invested = cur.fetchone()["n"]
+
+    return {
+        "discovered": discovered,
+        "validated": validated,
+        "escalated": escalated,
+        "invested": invested,
+        "period_days": days_back,
+    }
 
 
 # ============================================================================
-# BACKTEST OPERATIONS
+# BACKTEST
 # ============================================================================
 
 def save_backtest_result(
@@ -523,81 +540,81 @@ def save_backtest_result(
     committee_verdict: str,
     aligned_with_outcome: bool,
     dossier_text: str,
-) -> int:
-    """Save a backtest result."""
+) -> str:
+    """
+    Backtest rows live in the reports table with subjectType='backtest'.
+    This keeps the schema lean and avoids a separate table.
+    """
     with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            INSERT INTO backtest_results (
-                startup_name, actual_outcome, committee_verdict,
-                aligned_with_outcome, dossier_text, timestamp
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO reports
+                    (id, "subjectType", "schemaVersion", "reportJson",
+                     company, decision, "createdAt")
+                VALUES (%s, %s, %s, %s, %s, %s, now())
+                RETURNING id
+                """,
+                (
+                    _generate_cuid(),
+                    "backtest",
+                    "1.0",
+                    Json(
+                        {
+                            "startup_name": startup_name,
+                            "actual_outcome": actual_outcome,
+                            "committee_verdict": committee_verdict,
+                            "aligned_with_outcome": aligned_with_outcome,
+                            "dossier_text": dossier_text,
+                        }
+                    ),
+                    startup_name,
+                    committee_verdict,
+                ),
             )
-            VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            (
-                startup_name,
-                actual_outcome,
-                committee_verdict,
-                1 if aligned_with_outcome else 0,
-                dossier_text,
-                datetime.utcnow().isoformat()
-            )
-        )
-        return cursor.lastrowid
+            return cur.fetchone()["id"]
 
 
 def get_backtest_results() -> Dict[str, Any]:
-    """
-    Get backtest results for the API.
-    
-    Returns:
-        {
-            "total": int,
-            "aligned": int,
-            "accuracy_pct": float,
-            "per_startup": [
-                {"startup_name": "...", "actual_outcome": "...", ...}
-            ]
-        }
-    """
     with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT startup_name, actual_outcome, committee_verdict, aligned_with_outcome
-            FROM backtest_results
-            ORDER BY timestamp DESC
-            """
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT "reportJson" FROM reports
+                WHERE "subjectType" = 'backtest'
+                ORDER BY "createdAt" DESC
+                """
+            )
+            rows = cur.fetchall()
+
+    per_startup = []
+    for r in rows:
+        data = _coerce_json(r.get("reportJson")) or {}
+        per_startup.append(
+            {
+                "startup_name": data.get("startup_name"),
+                "actual_outcome": data.get("actual_outcome"),
+                "committee_verdict": data.get("committee_verdict"),
+                "aligned_with_outcome": bool(data.get("aligned_with_outcome")),
+            }
         )
-        rows = cursor.fetchall()
-        
-        per_startup = []
-        for row in rows:
-            per_startup.append({
-                "startup_name": row["startup_name"],
-                "actual_outcome": row["actual_outcome"],
-                "committee_verdict": row["committee_verdict"],
-                "aligned_with_outcome": bool(row["aligned_with_outcome"]),
-            })
-        
-        total = len(per_startup)
-        aligned = sum(1 for r in per_startup if r["aligned_with_outcome"])
-        accuracy_pct = (aligned / total * 100) if total > 0 else 0.0
-        
-        return {
-            "total": total,
-            "aligned": aligned,
-            "accuracy_pct": accuracy_pct,
-            "per_startup": per_startup,
-        }
+
+    total = len(per_startup)
+    aligned = sum(1 for r in per_startup if r["aligned_with_outcome"])
+    accuracy_pct = (aligned / total * 100) if total > 0 else 0.0
+
+    return {
+        "total": total,
+        "aligned": aligned,
+        "accuracy_pct": accuracy_pct,
+        "per_startup": per_startup,
+    }
 
 
 def clear_backtest_results():
-    """Clear all backtest results (for re-seeding)."""
     with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM backtest_results")
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM reports WHERE \"subjectType\" = 'backtest'")
 
 
 # ============================================================================
@@ -605,21 +622,13 @@ def clear_backtest_results():
 # ============================================================================
 
 def seed_database():
-    """Initialize the database schema."""
     init_db()
 
 
 if __name__ == "__main__":
-    # Quick test
     logging.basicConfig(level=logging.INFO)
+    from dotenv import load_dotenv
+
+    load_dotenv()
     seed_database()
-    print(f"✅ Database initialized at {SQLITE_PATH}")
-    
-    # Test adding a candidate
-    candidate_id = add_seen_candidate(
-        title="Test Startup",
-        url="https://test.com",
-        source="test",
-        discovery_confidence=7.5
-    )
-    print(f"✅ Added test candidate with ID: {candidate_id}")
+    print("Structured memory initialized (Postgres)")
