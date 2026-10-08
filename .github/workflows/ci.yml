@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  python:
+    name: Python — imports and self-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run canonical_key self-test
+        run: python -m src.memory.canonical_key
+
+      - name: Verify all Python imports resolve
+        run: |
+          python -c "import src.memory"
+          python -c "import src.agents.discovery_agent"
+          python -c "import src.agents.validation_agent"
+          python -c "import src.agents.dossier_builder"
+          python -c "import src.agents.investor_agent"
+          python -c "import src.agents.moderator_agent"
+          python -c "import src.agents.voting"
+          python -c "import src.agents.report_generator"
+          python -c "import src.orchestration.daily_cycle"
+          python -c "import src.scheduler.run_cycle"
+          python -c "import src.evaluation.backtest"
+          python -c "import src.evaluation.scorecard"
+          python -c "import src.llm.client"
+          python -c "import src.sources.hackernews_source"
+          python -c "import src.sources.reddit_source"
+          python -c "import src.sources.rss_source"
+          echo "All imports OK"
+
+  typescript:
+    name: TypeScript — typecheck and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install Node deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm prisma generate
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          AUTH_URL: http://localhost:3000
+          AUTH_TRUST_HOST: "true"
