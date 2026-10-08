@@ -30,6 +30,7 @@ from src.memory.structured_memory import (
     get_latest_dossier_for_candidate,
     get_recent_dossiers,
     save_decision,
+    save_report,
     get_decision,
     get_recent_reports,
     get_recent_reports_by_days,
@@ -140,6 +141,24 @@ class MemoryIntegration:
 
     def get_recent_reports_by_days(self, days: int = 7) -> List[Dict[str, Any]]:
         return get_recent_reports_by_days(days)
+
+    # ─── Report memory ───────────────────────────────────────────────
+
+    def save_report(
+        self,
+        candidate_id: str,
+        dossier_id: Optional[str],
+        decision_id: Optional[str],
+        report_json: Dict[str, Any],
+        schema_version: str = "1.0",
+    ) -> str:
+        return save_report(
+            candidate_id=candidate_id,
+            dossier_id=dossier_id,
+            decision_id=decision_id,
+            report_json=report_json,
+            schema_version=schema_version,
+        )
 
     # ─── Backtest memory ─────────────────────────────────────────────
 

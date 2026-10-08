@@ -474,6 +474,75 @@ def get_recent_reports_by_days(days: int = 7) -> List[Dict[str, Any]]:
                 r["round2_opinions"] = _coerce_json(r.pop("round2Opinions", None))
             return rows
 
+# ============================================================================
+# REPORTS
+# ============================================================================
+
+def save_report(
+    candidate_id: str,
+    dossier_id: Optional[str],
+    decision_id: Optional[str],
+    report_json: Dict[str, Any],
+    schema_version: str = "1.0",
+) -> str:
+    """
+    Persist a generated report to the reports table.
+
+    Args:
+        candidate_id: FK to candidates
+        dossier_id: FK to dossiers (nullable)
+        decision_id: FK to committee_decisions (nullable)
+        report_json: full report dict from report_generator
+        schema_version: report schema version
+
+    Returns:
+        str: the report id (cuid)
+    """
+    import hashlib
+
+    # Content hash for dedup — same report JSON should not produce duplicate rows
+    content_hash = hashlib.sha256(
+        json.dumps(report_json, sort_keys=True, default=str).encode("utf-8")
+    ).hexdigest()
+
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            # Idempotent: if content_hash already exists, return existing row
+            cur.execute(
+                'SELECT id FROM reports WHERE "contentHash" = %s',
+                (content_hash,),
+            )
+            existing = cur.fetchone()
+            if existing:
+                return existing["id"]
+
+            cur.execute(
+                """
+                INSERT INTO reports
+                    (id, "candidateId", "dossierId", "decisionId",
+                     "subjectType", "schemaVersion", "reportJson",
+                     "contentHash", company, decision, "weightedScore",
+                     "starRating", "createdAt")
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, now())
+                RETURNING id
+                """,
+                (
+                    _generate_cuid(),
+                    candidate_id,
+                    dossier_id,
+                    decision_id,
+                    "candidate",
+                    schema_version,
+                    Json(report_json),
+                    content_hash,
+                    report_json.get("company"),
+                    report_json.get("decision"),
+                    report_json.get("weighted_score"),
+                    report_json.get("star_rating"),
+                ),
+            )
+            return cur.fetchone()["id"]
+
 
 # ============================================================================
 # FUNNEL STATISTICS

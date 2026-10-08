@@ -215,20 +215,33 @@ class DailyCycle:
             logger.warning(f"    ⚠️ Failed to save decision: {e}")
         
         # Step 5: Generate report (PASS THE CANDIDATE FOR SOURCE INFO)
+                # Step 5: Generate report
         try:
             report = self.report_generator.generate_report(
                 dossier=dossier,
                 committee_result=committee_result,
-                candidate=candidate  # <-- THIS IS THE KEY CHANGE
+                candidate=candidate,
             )
             result["report"] = report
             logger.info(f"    ✅ Report generated: {report.get('star_rating', 0)} stars")
-            
-            # Log source info if available
+
             source_info = report.get("source_info", {})
             if source_info:
                 logger.info(f"    📌 Source: {source_info.get('platform_display', 'Unknown')} by {source_info.get('username', 'Unknown')}")
-            
+
+            # Step 6: Save report to Postgres
+            try:
+                report_id = self.memory.save_report(
+                    candidate_id=candidate.get("db_id"),
+                    dossier_id=result["memory_ids"].get("dossier_id"),
+                    decision_id=result["memory_ids"].get("decision_id"),
+                    report_json=report,
+                )
+                result["memory_ids"]["report_id"] = report_id
+                logger.info(f"    ✅ Report saved (ID: {report_id})")
+            except Exception as e:
+                logger.warning(f"    ⚠️ Failed to save report: {e}")
+
         except Exception as e:
             logger.error(f"    ❌ Report generation failed: {e}")
             result["errors"] = result.get("errors", []) + [str(e)]
