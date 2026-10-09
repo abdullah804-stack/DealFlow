@@ -25,6 +25,7 @@ model User {
 
   accounts      Account[]
   sessions      Session[]
+  ideaEvaluations IdeaEvaluation[]
 
   @@map("users")
 }
@@ -122,6 +123,7 @@ model Candidate {
   assessments         AgentAssessment[]
   decisions           CommitteeDecision[]
   reports             Report[]
+  ideaEvaluation      IdeaEvaluation?
 
   @@index([firstSeen])
   @@index([source])
@@ -262,4 +264,92 @@ model AgentRunLog {
   @@index([dailyRunId])
   @@index([createdAt])
   @@map("agent_run_logs")
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
+// IDEA EVALUATION TABLES — Phase 5
+// User-submitted ideas + interviews. Written by Next.js only.
+// ═══════════════════════════════════════════════════════════════════
+
+model IdeaEvaluation {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Intake
+  title         String
+  oneLiner      String   @db.Text
+  problem       String   @db.Text
+  solution      String   @db.Text
+  targetMarket  String?  @db.Text
+  businessModel String?  @db.Text
+  teamBackground String? @db.Text
+  competitors   String?  @db.Text
+  fundingStage  String?
+  askAmount     String?
+
+  // Lifecycle
+  status        String   @default("intake")
+  // intake | interviewing | review | evaluating | complete | failed_partial
+
+  failureReason String?  @db.Text
+
+  // Links to committee output
+  candidateId   String?  @unique
+  candidate     Candidate? @relation(fields: [candidateId], references: [id], onDelete: SetNull)
+
+  session       InterviewSession?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@map("idea_evaluations")
+}
+
+model InterviewSession {
+  id              String   @id @default(cuid())
+  evaluationId    String   @unique
+  evaluation      IdeaEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+
+  // Status mirrors evaluation.status but tracked separately to allow resume
+  status          String   @default("interviewing")
+  // interviewing | review | complete
+
+  currentQuestionKey String?
+  questionsAsked  Int      @default(0)
+  questionsAnswered Int    @default(0)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  turns           InterviewTurn[]
+
+  @@map("interview_sessions")
+}
+
+model InterviewTurn {
+  id             String   @id @default(cuid())
+  sessionId      String
+  session        InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  turnIndex      Int
+  specialist     String
+  // technical | finance | marketing | legal | founder
+
+  questionKey    String
+  questionText   String   @db.Text
+  isClarification Boolean @default(false)
+
+  answerText     String?  @db.Text
+  skipped        Boolean  @default(false)
+
+  createdAt      DateTime @default(now())
+  answeredAt     DateTime?
+
+  @@unique([sessionId, turnIndex])
+  @@index([sessionId])
+  @@map("interview_turns")
 }
