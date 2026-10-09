@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/authz";
 import { IntakeSchema } from "@/lib/interview/schema";
+import { generateNextQuestion } from "@/lib/interview/turn-generator";
 
 export async function GET() {
   const requestId = `req_${crypto.randomUUID()}`;
@@ -77,12 +78,67 @@ export async function POST(req: Request) {
     },
   });
 
+  if (!evaluation.session) {
+    return NextResponse.json(
+      {
+        error: {
+          code: "SESSION_CREATE_FAILED",
+          message: "Could not create interview session.",
+          details: [],
+          requestId,
+        },
+      },
+      { status: 500 }
+    );
+  }
+
+  // Generate the first question immediately so the user lands on a page
+  // that's ready to answer.
+  let firstTurnCreated = false;
+  try {
+    const next = await generateNextQuestion(
+      {
+        title: data.title,
+        oneLiner: data.oneLiner,
+        problem: data.problem,
+        solution: data.solution,
+        targetMarket: data.targetMarket ?? undefined,
+        businessModel: data.businessModel ?? undefined,
+      },
+      []
+    );
+
+    if (next) {
+      await prisma.interviewTurn.create({
+        data: {
+          sessionId: evaluation.session.id,
+          turnIndex: next.turnIndex,
+          specialist: next.specialist,
+          questionKey: next.questionKey,
+          questionText: next.questionText,
+          isClarification: next.isClarification,
+        },
+      });
+      await prisma.interviewSession.update({
+        where: { id: evaluation.session.id },
+        data: {
+          currentQuestionKey: next.questionKey,
+          questionsAsked: 1,
+        },
+      });
+      firstTurnCreated = true;
+    }
+  } catch (e) {
+    console.error("Failed to generate first question:", e);
+  }
+
   return NextResponse.json(
     {
       data: {
         id: evaluation.id,
         status: evaluation.status,
-        sessionId: evaluation.session?.id,
+        sessionId: evaluation.session.id,
+        firstTurnCreated,
       },
       requestId,
     },
