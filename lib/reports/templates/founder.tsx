@@ -65,12 +65,11 @@ export function FounderReportPdf({ report }: { report: ReportJson }) {
           </Text>
         </View>
 
-        <StatGrid
+                <StatGrid
           stars={report.star_rating}
           probability={report.probability_of_success_pct}
           checkSize={report.recommended_check_size}
           stage={report.recommended_stage}
-          weightedScore={report.weighted_score}
         />
 
         <HighlightRow

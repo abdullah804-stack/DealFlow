@@ -42,7 +42,12 @@ export const COLORS = {
 };
 
 // ─── Stylesheet ────────────────────────────────────────────────────
-
+function formatDecisionLabel(decision: string): string {
+  if (decision === "INSUFFICIENT_EVIDENCE") return "INSUFF. EVID.";
+  if (decision === "INVEST") return "INVEST";
+  if (decision === "PASS") return "PASS";
+  return decision;
+}
 export const styles = StyleSheet.create({
   page: {
     padding: 48,
@@ -292,9 +297,11 @@ export function ReportHeader({
         <Text style={styles.title}>{title}</Text>
         {meta && <Text style={styles.meta}>{meta}</Text>}
       </View>
-      {decision && (
+            {decision && (
         <View style={{ flex: 1, alignItems: "flex-end" }}>
-          <Text style={[styles.badge, badgeStyle]}>{decision}</Text>
+          <Text style={[styles.badge, badgeStyle]}>
+            {formatDecisionLabel(decision)}
+          </Text>
         </View>
       )}
     </View>
