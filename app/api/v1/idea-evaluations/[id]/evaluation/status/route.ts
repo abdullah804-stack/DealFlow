@@ -5,9 +5,8 @@ import { requireUserId } from "@/lib/authz";
 /**
  * GET /api/v1/idea-evaluations/[id]/evaluation/status
  *
- * Polled by the progress page. Once Phase 6 lands, this route returns
- * live progress from the committee run (assessments written, decision
- * made, report generated). Until then it returns `pending`.
+ * Polled by the progress page. Returns current status and, when complete,
+ * the decision and report reference.
  */
 export async function GET(
   _req: Request,
@@ -20,7 +19,26 @@ export async function GET(
   const evaluation = await prisma.ideaEvaluation.findFirst({
     where: { id, userId },
     include: {
-      session: { select: { id: true } },
+      candidate: {
+        select: {
+          id: true,
+          dossiers: {
+            select: {
+              decisions: {
+                select: {
+                  decision: true,
+                  weightedScore: true,
+                  reports: { select: { id: true }, take: 1 },
+                },
+                take: 1,
+                orderBy: { createdAt: "desc" },
+              },
+            },
+            take: 1,
+            orderBy: { createdAt: "desc" },
+          },
+        },
+      },
     },
   });
 
@@ -38,17 +56,19 @@ export async function GET(
     );
   }
 
-  // Phase 5: no committee run has happened yet. Return whatever the
-  // evaluation's state says, and let the client render accordingly.
+  const dossier = evaluation.candidate?.dossiers?.[0];
+  const decision = dossier?.decisions?.[0];
+  const reportId = decision?.reports?.[0]?.id ?? null;
+
   return NextResponse.json({
     data: {
       id: evaluation.id,
       status: evaluation.status,
       failureReason: evaluation.failureReason,
-      // These will be populated in Phase 6 when the committee runs.
       progress: null,
-      decision: null,
-      reportId: null,
+      decision: decision?.decision ?? null,
+      weightedScore: decision?.weightedScore ?? null,
+      reportId,
     },
     requestId,
   });

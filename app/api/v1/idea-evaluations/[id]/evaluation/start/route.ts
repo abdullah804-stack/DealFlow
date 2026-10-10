@@ -2,16 +2,23 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/authz";
 import { canTransition } from "@/lib/interview/state-machine";
+import { runCommitteeForEvaluation } from "@/lib/agents/committee";
 
 /**
  * POST /api/v1/idea-evaluations/[id]/evaluation/start
  *
- * Transitions a review-ready evaluation into "evaluating".
+ * Transitions a review-ready evaluation into "evaluating" and runs the
+ * full TS committee. Persists assessments, decision, and report, then
+ * flips status to "complete".
  *
- * As of Phase 5, this endpoint only marks the transition. The actual
- * committee run happens in Phase 6 once the TypeScript committee port
- * is complete. The progress page polls /evaluation/status, which will
- * return `pending` until Phase 6 lands.
+ * This is a synchronous call. Real execution takes 3-6 minutes due to
+ * sequential LLM calls. In production this should move to a background
+ * worker, but for v1 a synchronous call is acceptable because the request
+ * comes from an explicit user action (clicking "Run committee") and the
+ * progress page polls after the request fires.
+ *
+ * Note: Vercel's 300s function limit applies. If the committee run
+ * exceeds it, the client will see a 504. In that case, retry.
  */
 export async function POST(
   _req: Request,
@@ -24,9 +31,7 @@ export async function POST(
   const evaluation = await prisma.ideaEvaluation.findFirst({
     where: { id, userId },
     include: {
-      session: {
-        include: { turns: { orderBy: { turnIndex: "asc" } } },
-      },
+      session: { select: { id: true, status: true } },
     },
   });
 
@@ -44,7 +49,6 @@ export async function POST(
     );
   }
 
-  // Verify the interview is complete (all 20 required questions answered)
   if (evaluation.status !== "review") {
     return NextResponse.json(
       {
@@ -73,7 +77,8 @@ export async function POST(
     );
   }
 
-  // Ensure the session is marked complete
+  // Flip statuses to evaluating before we start the long-running work,
+  // so the progress page sees the transition immediately.
   if (evaluation.session) {
     await prisma.interviewSession.update({
       where: { id: evaluation.session.id },
@@ -81,21 +86,48 @@ export async function POST(
     });
   }
 
-  // Mark the evaluation as evaluating
   await prisma.ideaEvaluation.update({
     where: { id: evaluation.id },
     data: { status: "evaluating" },
   });
 
-  return NextResponse.json({
-    data: {
-      id: evaluation.id,
-      status: "evaluating",
-      // Phase 6 will wire in the real committee here
-      engine: "pending",
-      message:
-        "Committee evaluation queued. The TypeScript committee port lands in Phase 6.",
-    },
-    requestId,
-  });
+  try {
+    const result = await runCommitteeForEvaluation(evaluation.id);
+
+    return NextResponse.json({
+      data: {
+        id: evaluation.id,
+        status: "complete",
+        decision: result.decision,
+        weightedScore: result.weightedScore,
+        reportId: result.reportId,
+      },
+      requestId,
+    });
+  } catch (e) {
+    // Mark as failed_partial so the user can retry
+    await prisma.ideaEvaluation.update({
+      where: { id: evaluation.id },
+      data: {
+        status: "failed_partial",
+        failureReason:
+          e instanceof Error ? e.message : "Unknown committee failure",
+      },
+    });
+
+    return NextResponse.json(
+      {
+        error: {
+          code: "COMMITTEE_FAILED",
+          message:
+            e instanceof Error
+              ? e.message
+              : "Committee run failed. Your answers are saved; you can retry.",
+          details: [],
+          requestId,
+        },
+      },
+      { status: 500 }
+    );
+  }
 }
