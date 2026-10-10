@@ -1,6 +1,20 @@
 import React from "react";
 import { StyleSheet, Text, View, Page, Font } from "@react-pdf/renderer";
 
+// Register React-PDF's built-in Helvetica family explicitly.
+// Without this, @react-pdf/renderer v4 sometimes fails with
+// "Cannot read properties of undefined (reading 'unitsPerEm')"
+// because the internal font metrics lookup returns undefined.
+Font.register({
+  family: "Helvetica",
+  fonts: [
+    { src: "Helvetica" },
+    { src: "Helvetica-Bold", fontWeight: "bold" },
+    { src: "Helvetica-Oblique", fontStyle: "italic" },
+    { src: "Helvetica-BoldOblique", fontWeight: "bold", fontStyle: "italic" },
+  ],
+});
+
 /**
  * Shared styling and components for report PDFs.
  *
