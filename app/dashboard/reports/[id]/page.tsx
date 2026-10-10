@@ -1,120 +1,27 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireUserId } from "@/lib/authz";
 
 export const dynamic = "force-dynamic";
 
-const SECTION_ORDER = [
-  "executive_summary",
-  "startup_overview",
-  "competitive_landscape",
-  "technology_analysis",
-  "market_analysis",
-  "financial_analysis",
-  "legal_analysis",
-  "founder_evaluation",
-  "debate_summary",
-  "recommendation",
-];
+type ReportSection = {
+  title?: string;
+  body?: string;
+};
 
-export default async function EvaluationReportPage({
+export default async function ReportDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const userId = await requireUserId();
   const { id } = await params;
 
-  const evaluation = await prisma.ideaEvaluation.findFirst({
-    where: { id, userId },
-    include: {
-      candidate: {
-        include: {
-          dossiers: {
-            orderBy: { createdAt: "desc" },
-            take: 1,
-            include: {
-              decisions: {
-                orderBy: { createdAt: "desc" },
-                take: 1,
-                include: {
-                  reports: {
-                    orderBy: { createdAt: "desc" },
-                    take: 1,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
+  const report = await prisma.report.findUnique({ where: { id } });
 
-  if (!evaluation) notFound();
-
-  // Not yet evaluated
-  if (evaluation.status !== "complete" || !evaluation.candidate) {
-    return (
-      <div className="max-w-2xl">
-        <div className="mb-6">
-          <Link
-            href={`/dashboard/evaluate/${id}`}
-            className="text-[var(--color-text-low)] text-sm hover:text-[var(--color-teal)]"
-          >
-            ← Back to evaluation
-          </Link>
-        </div>
-        <div className="empty-state">
-          <div className="empty-icon">◌</div>
-          <h3>No report yet</h3>
-          <p className="text-[var(--color-text-mid)] text-sm mt-2 mb-6">
-            Status: <span className="font-mono">{evaluation.status}</span>. The
-            committee evaluation engine ships in Phase 6. Your interview
-            answers are saved and the report will appear here once the engine
-            runs.
-          </p>
-          {evaluation.status === "review" && (
-            <Link
-              href={`/dashboard/evaluate/${id}/review`}
-              className="btn-primary inline-block"
-            >
-              Go to review
-            </Link>
-          )}
-          {evaluation.status === "evaluating" && (
-            <Link
-              href={`/dashboard/evaluate/${id}/progress`}
-              className="btn-primary inline-block"
-            >
-              View progress
-            </Link>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  const dossier = evaluation.candidate.dossiers[0] ?? null;
-  const decision = dossier?.decisions[0] ?? null;
-  const report = decision?.reports[0] ?? null;
-
-  if (!report) {
-    return (
-      <div className="max-w-2xl">
-        <div className="empty-state">
-          <h3>Report pending</h3>
-          <p className="text-[var(--color-text-mid)] text-sm mt-2">
-            The committee finished but no report was written. This shouldn&apos;t
-            happen — please contact support.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  if (!report) notFound();
 
   const json = (report.reportJson ?? {}) as Record<string, unknown>;
+
   const starRating =
     report.starRating ?? (json.star_rating as number | undefined);
   const probability = json.probability_of_success_pct as number | undefined;
@@ -124,22 +31,35 @@ export default async function EvaluationReportPage({
   const stage = json.recommended_stage as string | undefined;
   const disclaimer = json.disclaimer as string | undefined;
 
+  const sectionOrder = [
+    "executive_summary",
+    "startup_overview",
+    "competitive_landscape",
+    "technology_analysis",
+    "market_analysis",
+    "financial_analysis",
+    "legal_analysis",
+    "founder_evaluation",
+    "debate_summary",
+    "recommendation",
+  ];
+
   return (
     <div className="max-w-4xl">
       <div className="mb-6">
         <Link
-          href="/dashboard/evaluate"
+          href="/dashboard/reports"
           className="text-[var(--color-text-low)] text-sm hover:text-[var(--color-teal)]"
         >
-          ← Back to evaluations
+          ← Back to reports
         </Link>
       </div>
 
       <div className="mb-8">
-        <div className="eyebrow">Your evaluation</div>
+        <div className="eyebrow">Investment memo</div>
         <div className="flex items-start justify-between gap-4">
           <h1 className="text-3xl font-semibold">
-            {report.company ?? evaluation.title}
+            {report.company ?? "Unknown company"}
           </h1>
           {report.decision && (
             <span
@@ -153,6 +73,8 @@ export default async function EvaluationReportPage({
         </div>
         <div className="flex items-center gap-3 mt-2 text-xs font-mono text-[var(--color-text-low)]">
           <span>{report.createdAt.toISOString().slice(0, 10)}</span>
+          <span>·</span>
+          <span>schema {report.schemaVersion}</span>
           {typeof report.weightedScore === "number" && (
             <>
               <span>·</span>
@@ -162,9 +84,9 @@ export default async function EvaluationReportPage({
         </div>
       </div>
 
-	      <div className="mb-6">
+      <div className="mb-6">
         <a
-          href={`/api/v1/idea-evaluations/${id}/report/pdf`}
+          href={`/api/v1/reports/${report.id}/pdf`}
           className="btn-ghost inline-block text-sm"
         >
           ↓ Download PDF
@@ -230,7 +152,7 @@ export default async function EvaluationReportPage({
       )}
 
       <div className="space-y-6">
-        {SECTION_ORDER.map((key) => {
+        {sectionOrder.map((key) => {
           const value = json[key];
           if (typeof value !== "string" || !value.trim()) return null;
           const title = key
