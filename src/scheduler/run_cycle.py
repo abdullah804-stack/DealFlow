@@ -17,7 +17,7 @@ import os
 import sys
 import logging
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Add project root to path
@@ -131,7 +131,7 @@ def main():
     logger.info("=" * 60)
     logger.info("DEALFLOW — DAILY CYCLE SCHEDULER")
     logger.info("=" * 60)
-    logger.info(f"Start time: {datetime.utcnow().isoformat()}")
+    logger.info(f"Start time: {datetime.now(timezone.utc).isoformat()}")
     
     # Check environment
     if not check_environment():
@@ -179,7 +179,7 @@ def main():
                 logger.warning(f"    - {error[:200]}...")
         
         # Log completion
-        logger.info(f"\nEnd time: {datetime.utcnow().isoformat()}")
+        logger.info(f"\nEnd time: {datetime.now(timezone.utc).isoformat()}")
         logger.info("=" * 60)
         
         # Return exit code

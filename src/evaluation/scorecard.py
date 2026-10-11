@@ -10,7 +10,7 @@ Provides:
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional
 
 from src.memory import get_funnel_stats, get_recent_reports
@@ -95,7 +95,7 @@ class Scorecard:
         reports = get_recent_reports(limit=100)
         
         # Filter by date
-        cutoff = (datetime.utcnow() - timedelta(days=days_back)).isoformat()
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=days_back)).isoformat()
         recent_reports = [
             r for r in reports
             if r.get("timestamp", "") >= cutoff
@@ -130,7 +130,7 @@ class Scorecard:
         reports = get_recent_reports(limit=50)
         
         # Filter by date
-        cutoff = (datetime.utcnow() - timedelta(days=days_back)).isoformat()
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=days_back)).isoformat()
         recent = [
             {
                 "timestamp": r.get("timestamp"),

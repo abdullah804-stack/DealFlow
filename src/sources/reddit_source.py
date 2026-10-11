@@ -15,7 +15,7 @@ Requires a custom User-Agent header (Reddit API policy).
 
 import logging
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from typing import List, Dict, Any, Optional
 import re
 
@@ -87,7 +87,7 @@ def fetch_subreddit_posts(
                 posts.append(post_data)
         
         # Filter by age
-        cutoff_time = datetime.utcnow() - timedelta(hours=max_hours_back)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(hours=max_hours_back)
         filtered_posts = []
         for post in posts:
             created_utc = post.get("created_utc", 0)
@@ -344,7 +344,7 @@ def get_reddit_search_results(
         data = response.json()
         
         candidates = []
-        cutoff_time = datetime.utcnow() - timedelta(hours=max_hours_back)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(hours=max_hours_back)
         
         for child in data.get("data", {}).get("children", []):
             post = child.get("data", {})

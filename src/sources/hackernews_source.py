@@ -11,7 +11,7 @@ their products to the HN community.
 
 import logging
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from typing import List, Dict, Any, Optional
 import requests
 
@@ -227,7 +227,7 @@ def get_show_hn_posts(
     
     # Parse Show HN posts
     candidates = []
-    cutoff_time = datetime.utcnow() - timedelta(hours=max_hours_back)
+    cutoff_time = datetime.now(timezone.utc) - timedelta(hours=max_hours_back)
     
     for item in items:
         # Check if it's a Show HN

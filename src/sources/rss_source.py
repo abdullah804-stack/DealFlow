@@ -12,7 +12,7 @@ Feeds monitored (from settings.py):
 
 import logging
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from typing import List, Dict, Any, Optional
 import re
 
@@ -86,7 +86,7 @@ def fetch_all_feeds(
         feed_urls = RSS_FEEDS
     
     all_entries = []
-    cutoff_time = datetime.utcnow() - timedelta(hours=max_hours_back)
+    cutoff_time = datetime.now(timezone.utc) - timedelta(hours=max_hours_back)
     
     for feed_url in feed_urls:
         entries = fetch_feed(feed_url, max_entries)

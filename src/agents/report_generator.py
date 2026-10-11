@@ -16,7 +16,7 @@ are explicitly labeled as estimates, not statistical predictions.
 
 import logging
 from typing import Dict, Any, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 from src.llm.client import call_llm_json
 
@@ -60,7 +60,7 @@ class ReportGenerator:
         report = self._generate_with_llm(dossier, committee_result, candidate)
 
         # Add metadata after LLM output
-        report["timestamp"] = datetime.utcnow().isoformat()
+        report["timestamp"] = datetime.now(timezone.utc).isoformat()
         report["company"] = dossier.get("company", "Unknown")
         report["decision"] = committee_result.get("vote_result", {}).get("decision", "PASS")
         report["weighted_score"] = committee_result.get("vote_result", {}).get("weighted_total", 0)
@@ -378,7 +378,7 @@ SOURCE:
             "debate_summary": "Report generation failed.",
             "recommendation": f"Based on committee vote: {decision}",
             "disclaimer": "This is a fallback report. LLM-generated analysis was unavailable.",
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "decision": decision,
             "weighted_score": score,
             "source_info": self._extract_source_info(candidate) if candidate else {"platform": "Unknown", "username": "Unknown"},

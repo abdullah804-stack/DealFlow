@@ -16,7 +16,7 @@ Cap: MAX_CANDIDATES_FULL_COMMITTEE_PER_DAY = 3
 
 import logging
 from typing import List, Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 from src.agents.discovery_agent import DiscoveryAgent
 from src.agents.validation_agent import ValidationAgent
@@ -68,7 +68,7 @@ class DailyCycle:
         logger.info("STARTING DAILY CYCLE")
         logger.info("=" * 60)
         
-        self.results["timestamp"] = datetime.utcnow().isoformat()
+        self.results["timestamp"] = datetime.now(timezone.utc).isoformat()
         
         # Step 1: Discovery
         logger.info("\n📊 STEP 1: DISCOVERY")
@@ -282,9 +282,9 @@ def run_daily_cycle_with_logging() -> Dict[str, Any]:
     logger.info("DEALFLOW — DAILY CYCLE")
     logger.info("=" * 60)
     
-    start_time = datetime.utcnow()
+    start_time = datetime.now(timezone.utc)
     result = run_daily_cycle()
-    end_time = datetime.utcnow()
+    end_time = datetime.now(timezone.utc)
     
     duration = (end_time - start_time).total_seconds()
     logger.info(f"\n⏱️  Cycle completed in {duration:.2f} seconds")

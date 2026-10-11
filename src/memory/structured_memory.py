@@ -19,7 +19,7 @@ import json
 import logging
 import os
 from contextlib import contextmanager
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from typing import Optional, List, Dict, Any
 
 import psycopg
@@ -103,7 +103,7 @@ def init_db():
 # ============================================================================
 
 def _now_iso() -> str:
-    return datetime.utcnow().isoformat()
+    return datetime.now(timezone.utc).isoformat()
 
 
 def _coerce_json(value):
@@ -224,7 +224,7 @@ def get_recent_candidates(
     with get_db() as conn:
         with conn.cursor() as cur:
             if days_back:
-                cutoff = datetime.utcnow() - timedelta(days=days_back)
+                cutoff = datetime.now(timezone.utc) - timedelta(days=days_back)
                 cur.execute(
                     """
                     SELECT * FROM candidates
@@ -440,7 +440,7 @@ def get_recent_reports(limit: int = 10) -> List[Dict[str, Any]]:
 
 
 def get_recent_reports_by_days(days: int = 7) -> List[Dict[str, Any]]:
-    cutoff = datetime.utcnow() - timedelta(days=days)
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     with get_db() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -549,7 +549,7 @@ def save_report(
 # ============================================================================
 
 def get_funnel_stats(days_back: int = 7) -> Dict[str, Any]:
-    cutoff = datetime.utcnow() - timedelta(days=days_back)
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days_back)
     with get_db() as conn:
         with conn.cursor() as cur:
             cur.execute(
