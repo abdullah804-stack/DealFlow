@@ -78,3 +78,75 @@ jobs:
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           AUTH_URL: http://localhost:3000
           AUTH_TRUST_HOST: "true"
+
+
+  voting-parity:
+    name: Voting parity (Python vs TypeScript)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install Python deps
+        run: pip install -r requirements.txt
+
+      - name: Install Node deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Python parity fixture
+        run: python tests/test_voting_parity.py > /tmp/py-parity.txt
+
+      - name: Run TS parity fixture
+        run: npx tsx tests/voting_parity.ts > /tmp/ts-parity.txt
+
+      - name: Compare outputs
+        run: |
+          python - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+
+          def extract(path):
+              text = Path(path).read_text()
+              m = re.search(
+                  r"VOTING_PARITY_JSON_START\s*(.*?)\s*VOTING_PARITY_JSON_END",
+                  text,
+                  re.DOTALL,
+              )
+              if not m:
+                  raise SystemExit(f"No parity block found in {path}")
+              return json.loads(m.group(1))
+
+          py = extract("/tmp/py-parity.txt")
+          ts = extract("/tmp/ts-parity.txt")
+
+          # Normalize: sort by name for comparison
+          def norm(rows):
+              return sorted(
+                  [{"name": r["name"],
+                    "weightedTotal": round(r["weightedTotal"], 4),
+                    "decision": r["decision"],
+                    "fastPath": r["fastPath"]} for r in rows],
+                  key=lambda x: x["name"],
+              )
+
+          if norm(py) != norm(ts):
+              print("MISMATCH")
+              print("PY:", json.dumps(norm(py), indent=2))
+              print("TS:", json.dumps(norm(ts), indent=2))
+              raise SystemExit(1)
+
+          print("Voting parity OK:", len(py), "cases matched")
+          PY
