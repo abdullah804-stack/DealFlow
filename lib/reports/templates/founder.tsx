@@ -43,7 +43,7 @@ export function FounderReportPdf({ report }: { report: ReportJson }) {
       creator="DealFlow"
     >
       <Page size="A4" style={styles.page} wrap>
-        <ReportHeader
+                <ReportHeader
           title={report.company}
           decision={report.decision}
           meta={[
@@ -51,6 +51,9 @@ export function FounderReportPdf({ report }: { report: ReportJson }) {
             report.generatedAt.slice(0, 10),
             report.weighted_score
               ? `Score: ${report.weighted_score.toFixed(2)}/10`
+              : null,
+            report.decision === "INSUFFICIENT_EVIDENCE"
+              ? "Committee lacked sufficient evidence for a definitive call"
               : null,
           ]
             .filter(Boolean)

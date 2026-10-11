@@ -44,16 +44,17 @@ export function DiscoveryReportPdf({ report }: { report: ReportJson }) {
       creator="DealFlow"
     >
       <Page size="A4" style={styles.page} wrap>
-        <ReportHeader
+                <ReportHeader
           title={report.company}
           decision={report.decision}
           meta={[
+            "Idea evaluation",
             report.generatedAt.slice(0, 10),
             report.weighted_score
-              ? `Weighted score: ${report.weighted_score.toFixed(2)}/10`
+              ? `Score: ${report.weighted_score.toFixed(2)}/10`
               : null,
-            report.committee?.rubricVersion
-              ? `Rubric v${report.committee.rubricVersion}`
+            report.decision === "INSUFFICIENT_EVIDENCE"
+              ? "Committee lacked sufficient evidence for a definitive call"
               : null,
           ]
             .filter(Boolean)

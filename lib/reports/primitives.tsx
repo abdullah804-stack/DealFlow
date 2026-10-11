@@ -43,7 +43,7 @@ export const COLORS = {
 
 // ─── Stylesheet ────────────────────────────────────────────────────
 function formatDecisionLabel(decision: string): string {
-  if (decision === "INSUFFICIENT_EVIDENCE") return "INSUFF. EVID.";
+  if (decision === "INSUFFICIENT_EVIDENCE") return "PARTIAL";
   if (decision === "INVEST") return "INVEST";
   if (decision === "PASS") return "PASS";
   return decision;
