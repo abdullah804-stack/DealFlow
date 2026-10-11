@@ -26,9 +26,22 @@ DATA_DIR.mkdir(exist_ok=True)
 REDDIT_SUBREDDITS = ["startups", "SideProject", "Entrepreneur"]
 
 # RSS feeds to monitor
+# RSS feeds to monitor.
+#
+# Note on Reddit: the JSON API (reddit.com/r/x.json) requires OAuth since
+# mid-2023 and returns 403 for anonymous requests. The RSS endpoints
+# (reddit.com/r/x/.rss) still work without auth and give us the same
+# signal. reddit_source.py remains in the codebase as a fallback path
+# but will return 0 candidates until OAuth is added.
 RSS_FEEDS = [
     "https://techcrunch.com/category/startups/feed/",
-    # Add more working feeds here as needed
+    "https://news.ycombinator.com/rss",
+    "https://www.reddit.com/r/startups/.rss",
+    "https://www.reddit.com/r/SideProject/.rss",
+    "https://www.reddit.com/r/Entrepreneur/.rss",
+    "https://feeds.feedburner.com/venturebeat/SZYF",
+    "https://hackernoon.com/feed",
+    "https://www.producthunt.com/feed",
 ]
 
 # ============================================================================

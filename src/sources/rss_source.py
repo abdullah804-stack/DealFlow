@@ -93,9 +93,11 @@ def fetch_all_feeds(
         
         for entry in entries:
             # Check publication date
+                        # Check publication date
             published = entry.get("published_parsed") or entry.get("updated_parsed")
             if published:
-                entry_time = datetime(*published[:6])  # Convert time.struct_time to datetime
+                # feedparser returns time.struct_time in UTC; make it aware
+                entry_time = datetime(*published[:6], tzinfo=timezone.utc)
                 if entry_time < cutoff_time:
                     continue
             else:
