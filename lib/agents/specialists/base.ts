@@ -52,7 +52,7 @@ Be critical but fair. Use "unknowns" for anything the dossier does not support.
   try {
     const raw = await callLLMJson(prompt, systemPrompt, {
       temperature: 0.4,
-      maxTokens: 1200,
+      maxTokens: 700,
     });
 
     const parsed = AgentAssessmentSchema.safeParse(raw);
@@ -137,10 +137,10 @@ Fix it to match this exact shape:
 
 Return valid json only.`;
 
-    const repaired = await callLLMJson(
+      const repaired = await callLLMJson(
       prompt,
       "You repair malformed JSON. Respond with valid json only.",
-      { temperature: 0.0, maxTokens: 800 }
+      { temperature: 0.0, maxTokens: 600 }
     );
     const parsed = AgentAssessmentSchema.safeParse(repaired);
     return parsed.success ? parsed.data : null;

@@ -93,48 +93,35 @@ async function runRound2(
         )
         .join("\n");
 
-      const prompt = `You previously scored this startup. You are ${AGENT_DISPLAY[own.agentType]}.
+           const prompt = `You are ${AGENT_DISPLAY[own.agentType]}. You scored this startup ${own.score.toFixed(1)}/10.
 
-YOUR INITIAL ASSESSMENT:
-Score: ${own.score.toFixed(1)}/10
-Summary: ${own.summary}
-
-OTHER INVESTORS:
+OTHER INVESTORS SAID:
 ${othersText}
 
-Considering their perspectives, either confirm or adjust your score.
-Return valid json:
-{
-  "agentType": "${own.agentType}",
-  "score": <number 0-10>,
-  "summary": "<keep or update, 20-800 chars>",
-  "strengths": ${JSON.stringify(own.strengths)},
-  "weaknesses": ${JSON.stringify(own.weaknesses)},
-  "risks": ${JSON.stringify(own.risks)},
-  "assumptions": ${JSON.stringify(own.assumptions)},
-  "evidenceIds": [],
-  "unknowns": ${JSON.stringify(own.unknowns)},
-  "recommendedActions": ${JSON.stringify(own.recommendedActions)},
-  "confidence": "${own.confidence}"
-}
-
-Only change what you genuinely reconsidered. Return valid json only.`;
+After considering their views, confirm or adjust your score.
+Return valid json: { "score": <number 0-10>, "changedMind": <true|false> }
+`;
 
       try {
-        const raw = await callLLMJson(
+                const raw = await callLLMJson(
           prompt,
           `${buildSystemHint(own.agentType)}\n\nRespond with valid json only.`,
-          { temperature: 0.3, maxTokens: 1000 }
+          { temperature: 0.3, maxTokens: 150 }
         );
 
-        // Preserve the shape from round 1 if parse fails
-        const merged = {
+        // Round 2 only returns { score, changedMind }.
+        // We keep all round 1 fields except the score, which we may update.
+        const newScore =
+          typeof raw === "object" &&
+          raw !== null &&
+          typeof (raw as { score?: unknown }).score === "number"
+            ? (raw as { score: number }).score
+            : own.score;
+
+        return {
           ...own,
-          ...(typeof raw === "object" && raw !== null ? raw : {}),
-          agentType: own.agentType,
-          evidenceIds: [],
+          score: Math.max(0, Math.min(10, newScore)),
         };
-        return merged as AgentAssessment;
       } catch {
         return own;
       }

@@ -128,7 +128,7 @@ All string sections must be non-empty. All predictions are LLM-generated estimat
     llmOutput = await callLLMJson(
       prompt,
       "You are a VC analyst writing investment memos. Respond with valid json only. Do not fabricate facts — only use the dossier and committee output.",
-      { temperature: 0.5, maxTokens: 2200 }
+         { temperature: 0.5, maxTokens: 1400 }
     );
   } catch (e) {
     // We'll fall back to a minimal report assembled from assessments
