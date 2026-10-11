@@ -89,13 +89,14 @@ export const styles = StyleSheet.create({
     color: "#666",
     marginTop: 4,
   },
-  badge: {
-    paddingVertical: 4,
+    badge: {
+    paddingVertical: 5,
     paddingHorizontal: 12,
     borderRadius: 12,
-    fontSize: 9,
+    fontSize: 8,
     fontFamily: "Helvetica-Bold",
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
+    textAlign: "center",
   },
   badgeInvest: {
     backgroundColor: "#d1f5ed",
@@ -289,16 +290,16 @@ export function ReportHeader({
 
   return (
     <View style={styles.headerRow}>
-      <View style={{ flex: 1 }}>
+      <View style={{ width: 100 }}>
         <Text style={styles.brand}>DEALFLOW</Text>
         <Text style={styles.brandSub}>DEAL INTELLIGENCE</Text>
       </View>
-      <View style={{ flex: 3 }}>
+      <View style={{ flex: 1, paddingHorizontal: 12 }}>
         <Text style={styles.title}>{title}</Text>
         {meta && <Text style={styles.meta}>{meta}</Text>}
       </View>
-            {decision && (
-        <View style={{ flex: 1, alignItems: "flex-end" }}>
+      {decision && (
+        <View style={{ width: 110, alignItems: "flex-end" }}>
           <Text style={[styles.badge, badgeStyle]}>
             {formatDecisionLabel(decision)}
           </Text>
