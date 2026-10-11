@@ -1,13 +1,17 @@
-import { logLLMCall, incrementLLMCount } from "./cost-tracker";
 /**
  * LLM client for TypeScript — port of src/llm/client.py.
  *
- * Primary: Groq (llama/qwen models)
- * Fallback: OpenRouter (nemotron, etc.)
+ * Primary: Groq (qwen/qwen3.8-27b)
+ * Fallback: OpenRouter (nvidia/nemotron-3-super-120b-a12b:free)
  *
  * All calls go through here. Zod validation happens at the caller, not
  * in this module, because each call site has its own response schema.
+ *
+ * On 429 responses, honors the provider's Retry-After header.
+ * Falls back to exponential backoff with jitter otherwise.
  */
+
+import { logLLMCall, incrementLLMCount } from "./cost-tracker";
 
 const GROQ_BASE_URL = "https://api.groq.com/openai/v1";
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
@@ -26,6 +30,27 @@ type CallOptions = {
   agentType?: string;
 };
 
+class HTTPError extends Error {
+  retryAfterMs: number | null;
+  status: number;
+
+  constructor(message: string, status: number, retryAfterMs: number | null) {
+    super(message);
+    this.name = "HTTPError";
+    this.status = status;
+    this.retryAfterMs = retryAfterMs;
+  }
+}
+
+function parseRetryAfter(header: string | null): number | null {
+  if (!header) return null;
+  const asSeconds = parseFloat(header);
+  if (Number.isFinite(asSeconds)) return Math.ceil(asSeconds * 1000);
+  const asDate = Date.parse(header);
+  if (Number.isFinite(asDate)) return Math.max(0, asDate - Date.now());
+  return null;
+}
+
 async function callOpenAICompatible(
   baseUrl: string,
   apiKey: string,
@@ -34,11 +59,12 @@ async function callOpenAICompatible(
   opts: CallOptions
 ): Promise<string> {
   const maxRetries = opts.retries ?? 2;
-  let lastError: unknown = null;
   const agentType = opts.agentType ?? "unknown";
+  let lastError: unknown = null;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     const start = Date.now();
+
     try {
       const body: Record<string, unknown> = {
         model,
@@ -61,22 +87,22 @@ async function callOpenAICompatible(
 
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(`HTTP ${res.status}: ${text.slice(0, 200)}`);
+        throw new HTTPError(
+          `HTTP ${res.status}: ${text.slice(0, 200)}`,
+          res.status,
+          parseRetryAfter(res.headers.get("retry-after"))
+        );
       }
 
       const data = (await res.json()) as {
         choices?: Array<{ message?: { content?: string } }>;
-        usage?: {
-          prompt_tokens?: number;
-          completion_tokens?: number;
-        };
+        usage?: { prompt_tokens?: number; completion_tokens?: number };
       };
       const content = data.choices?.[0]?.message?.content;
       if (!content) throw new Error("Empty response from LLM");
 
       const durationMs = Date.now() - start;
 
-      // Fire-and-forget logging
       void logLLMCall({
         agentType,
         model,
@@ -93,7 +119,17 @@ async function callOpenAICompatible(
       const durationMs = Date.now() - start;
 
       if (attempt < maxRetries) {
-        await new Promise((r) => setTimeout(r, 1000 * 2 ** attempt));
+        let waitMs: number;
+
+        if (e instanceof HTTPError && e.retryAfterMs != null && e.retryAfterMs > 0) {
+          waitMs = Math.min(e.retryAfterMs, 45_000);
+        } else {
+          const base = 1000 * 2 ** attempt;
+          const jitter = Math.floor(Math.random() * 500);
+          waitMs = Math.min(base + jitter, 20_000);
+        }
+
+        await new Promise((r) => setTimeout(r, waitMs));
       } else {
         void logLLMCall({
           agentType,
@@ -102,13 +138,16 @@ async function callOpenAICompatible(
           outputTokens: 0,
           durationMs,
           status: "failed_fatal",
-          errorMessage: e instanceof Error ? e.message.slice(0, 500) : "unknown",
+          errorMessage:
+            e instanceof Error ? e.message.slice(0, 500) : "unknown",
         });
       }
     }
   }
+
   throw lastError instanceof Error ? lastError : new Error(String(lastError));
 }
+
 /**
  * Strip markdown code fences that LLMs sometimes wrap JSON in.
  * Ported from src/llm/client.py::_strip_json_fence.
@@ -133,7 +172,10 @@ export function stripJsonFence(text: string): string {
   s = s.trim();
 
   if (s && !s.startsWith("{") && !s.startsWith("[")) {
-    for (const [open, close] of [["{", "}"], ["[", "]"]] as const) {
+    for (const [open, close] of [
+      ["{", "}"],
+      ["[", "]"],
+    ] as const) {
       const start = s.indexOf(open);
       const end = s.lastIndexOf(close);
       if (start !== -1 && end > start) {
@@ -159,7 +201,6 @@ export async function callLLM(
   if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
   messages.push({ role: "user", content: prompt });
 
-  // Groq primary
   try {
     const groqKey = process.env.GROQ_API_KEY;
     if (!groqKey) throw new Error("GROQ_API_KEY not set");
@@ -171,10 +212,9 @@ export async function callLLM(
       opts
     );
   } catch {
-    // fall through
+    // fall through to OpenRouter
   }
 
-  // OpenRouter fallback
   const orKey = process.env.OPENROUTER_API_KEY;
   if (!orKey) throw new Error("OPENROUTER_API_KEY not set");
   return await callOpenAICompatible(
@@ -195,7 +235,6 @@ export async function callLLMJson(
   systemPrompt?: string,
   opts: CallOptions = {}
 ): Promise<Record<string, unknown>> {
-  // Groq requires the literal word "json" in messages when response_format=json_object
   const safeSystem =
     systemPrompt && !systemPrompt.toLowerCase().includes("json")
       ? `${systemPrompt}\n\nRespond with valid json only.`
