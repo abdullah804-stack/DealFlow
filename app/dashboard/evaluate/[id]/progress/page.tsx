@@ -24,6 +24,31 @@ export default function ProgressPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [retrying, setRetrying] = useState(false);
+  const [retryError, setRetryError] = useState("");
+
+  async function handleRetry() {
+    setRetrying(true);
+    setRetryError("");
+    try {
+      const res = await fetch(
+        `/api/v1/idea-evaluations/${id}/evaluation/start`,
+        { method: "POST" }
+      );
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setRetryError(body?.error?.message ?? "Retry failed.");
+        setRetrying(false);
+        return;
+      }
+      // Reload status — will see "evaluating" then poll again
+      window.location.reload();
+    } catch (e) {
+      setRetryError(e instanceof Error ? e.message : "Retry failed.");
+      setRetrying(false);
+    }
+  }
+
   const poll = useCallback(async () => {
     const res = await fetch(
       `/api/v1/idea-evaluations/${id}/evaluation/status`
@@ -103,9 +128,17 @@ export default function ProgressPage() {
             {status.failureReason ??
               "The committee run failed. Your interview answers are saved — you can retry."}
           </p>
-          <Link href="/dashboard/evaluate" className="btn-ghost inline-block">
-            Back to evaluations
-          </Link>
+          <div className="flex items-center gap-3">
+            <button onClick={handleRetry} disabled={retrying} className="btn-primary">
+              {retrying ? "Retrying…" : "Retry committee run"}
+            </button>
+            <Link href="/dashboard/evaluate" className="btn-ghost inline-block">
+              Back to evaluations
+            </Link>
+          </div>
+          {retryError && (
+            <p className="text-[var(--color-coral)] text-sm mt-4">{retryError}</p>
+          )}
         </div>
       </div>
     );
