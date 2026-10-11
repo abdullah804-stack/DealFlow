@@ -34,9 +34,11 @@ export type Disagreement = z.infer<typeof DisagreementSchema>;
 
 export const ReportJsonSchema = z.object({
   schemaVersion: z.string().default(ReportSchemaVersion),
-  subjectType: z.enum(["candidate", "idea_evaluation", "backtest"]),
+  subjectType: z
+    .enum(["candidate", "idea_evaluation", "backtest"])
+    .default("candidate"),
   subjectId: z.string().optional(),
-  generatedAt: z.string(),
+  generatedAt: z.string().default(() => new Date().toISOString()),
 
   // Core fields
   company: z.string(),
