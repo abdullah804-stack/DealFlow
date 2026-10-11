@@ -1,3 +1,4 @@
+import { logLLMCall, incrementLLMCount } from "./cost-tracker";
 /**
  * LLM client for TypeScript — port of src/llm/client.py.
  *
@@ -22,6 +23,7 @@ type CallOptions = {
   maxTokens?: number;
   retries?: number;
   responseFormat?: "json_object" | "text";
+  agentType?: string;
 };
 
 async function callOpenAICompatible(
@@ -33,8 +35,10 @@ async function callOpenAICompatible(
 ): Promise<string> {
   const maxRetries = opts.retries ?? 2;
   let lastError: unknown = null;
+  const agentType = opts.agentType ?? "unknown";
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const start = Date.now();
     try {
       const body: Record<string, unknown> = {
         model,
@@ -62,20 +66,49 @@ async function callOpenAICompatible(
 
       const data = (await res.json()) as {
         choices?: Array<{ message?: { content?: string } }>;
+        usage?: {
+          prompt_tokens?: number;
+          completion_tokens?: number;
+        };
       };
       const content = data.choices?.[0]?.message?.content;
       if (!content) throw new Error("Empty response from LLM");
+
+      const durationMs = Date.now() - start;
+
+      // Fire-and-forget logging
+      void logLLMCall({
+        agentType,
+        model,
+        promptTokens: data.usage?.prompt_tokens ?? 0,
+        outputTokens: data.usage?.completion_tokens ?? 0,
+        durationMs,
+        status: "ok",
+      });
+      incrementLLMCount();
+
       return content.trim();
     } catch (e) {
       lastError = e;
+      const durationMs = Date.now() - start;
+
       if (attempt < maxRetries) {
         await new Promise((r) => setTimeout(r, 1000 * 2 ** attempt));
+      } else {
+        void logLLMCall({
+          agentType,
+          model,
+          promptTokens: 0,
+          outputTokens: 0,
+          durationMs,
+          status: "failed_fatal",
+          errorMessage: e instanceof Error ? e.message.slice(0, 500) : "unknown",
+        });
       }
     }
   }
   throw lastError instanceof Error ? lastError : new Error(String(lastError));
 }
-
 /**
  * Strip markdown code fences that LLMs sometimes wrap JSON in.
  * Ported from src/llm/client.py::_strip_json_fence.
