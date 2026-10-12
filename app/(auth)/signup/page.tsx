@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Spinner } from "@/components/Spinner";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -106,12 +107,19 @@ export default function SignupPage() {
               <p className="text-[var(--color-coral)] text-sm">{error}</p>
             )}
 
-            <button
+                        <button
               type="submit"
               disabled={loading}
               className="btn-primary w-full"
             >
-              {loading ? "Creating account…" : "Create account"}
+              {loading ? (
+                <span className="inline-flex items-center justify-center gap-2">
+                  <Spinner size={14} />
+                  Creating account…
+                </span>
+              ) : (
+                "Create account"
+              )}
             </button>
           </form>
 

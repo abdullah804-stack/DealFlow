@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import { Spinner } from "@/components/Spinner";
 
 type Turn = {
   id: string;
@@ -264,12 +265,19 @@ export default function InterviewPage() {
                   >
                     Skip
                   </button>
-                  <button
+                                    <button
                     type="submit"
                     disabled={submitting || !answer.trim()}
                     className="btn-primary"
                   >
-                    {submitting ? "Submitting…" : "Submit"}
+                    {submitting ? (
+                      <span className="inline-flex items-center justify-center gap-2">
+                        <Spinner size={14} />
+                        Submitting…
+                      </span>
+                    ) : (
+                      "Submit"
+                    )}
                   </button>
                 </div>
               </div>

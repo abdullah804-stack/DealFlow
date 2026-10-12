@@ -1,7 +1,5 @@
+import { Loading } from "@/components/Loading";
+
 export default function DashboardLoading() {
-  return (
-    <div className="max-w-4xl">
-      <div className="loading-state">Loading…</div>
-    </div>
-  );
+  return <Loading label="Loading dashboard" fullPage />;
 }
