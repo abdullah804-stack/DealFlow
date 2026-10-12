@@ -9,8 +9,7 @@ export function Logo({
   size?: number;
 }) {
   return (
-    <Link href={href} className="flex items-center gap-3">
-      <Image
+    <Link href={href} className="logo-link flex items-center gap-3">      <Image
         src="/logo.png"
         alt="DealFlow"
         width={size}

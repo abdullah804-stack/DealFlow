@@ -792,3 +792,206 @@ input {
     color: var(--color-text-hi);
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   ANIMATION SWEEP — Level 2 intensity
+   Consistent hover/motion feel across every page
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Card hover glow (panels) ────────────────────────────────── */
+
+.panel,
+.panel-lg {
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+
+.panel:hover,
+.panel-lg:hover {
+  border-color: rgba(57, 255, 20, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(57, 255, 20, 0.15),
+    0 6px 24px rgba(0, 0, 0, 0.35),
+    0 0 32px rgba(57, 255, 20, 0.06);
+  transform: translateY(-1px);
+}
+
+/* Skip the lift for panels that contain forms or large content — they
+   shouldn't jump when the user is interacting with inputs. */
+.panel:has(textarea):hover,
+.panel:has(input):hover,
+.panel-lg:has(textarea):hover,
+.panel-lg:has(input):hover {
+  transform: none;
+}
+
+/* ─── Button polish ────────────────────────────────────────────── */
+
+.btn-primary {
+  transition:
+    filter 0.15s ease,
+    box-shadow 0.25s ease,
+    transform 0.15s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+  box-shadow:
+    0 0 24px var(--color-neon-glow),
+    0 0 48px rgba(57, 255, 20, 0.15);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0) scale(0.985);
+  box-shadow: 0 0 12px var(--color-neon-glow);
+}
+
+.btn-ghost {
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.btn-ghost:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* ─── Link underline sweep ─────────────────────────────────────── */
+
+/* Opt-in class: <a className="link-sweep"> */
+.link-sweep {
+  position: relative;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.link-sweep::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1px;
+  background: var(--color-neon);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.link-sweep:hover::after {
+  transform: scaleX(1);
+}
+
+/* ─── Section heading accent ───────────────────────────────────── */
+
+/* Opt-in class: <h2 className="section-heading"> */
+.section-heading {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 12px;
+}
+
+.section-heading::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 40px;
+  background: var(--color-neon);
+  box-shadow: 0 0 12px var(--color-neon-glow);
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* When the section enters the viewport, the bar grows in.
+   The Reveal component toggles the `visible` class on an ancestor. */
+.reveal.visible .section-heading::after,
+.section-heading.in-view::after {
+  transform: scaleX(1);
+}
+
+/* Fallback: grow in on hover if never triggered by observer */
+.section-heading:hover::after {
+  transform: scaleX(1);
+}
+
+/* ─── Top nav hover ────────────────────────────────────────────── */
+
+.site-header a:not(.btn-primary):not(.btn-ghost):not(.logo-link) {
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.site-header a:not(.btn-primary):not(.btn-ghost):not(.logo-link)::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 1px;
+  background: var(--color-neon);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.site-header a:not(.btn-primary):not(.btn-ghost):not(.logo-link):hover::after {
+  transform: scaleX(1);
+}
+
+/* ─── Form input glow on focus ─────────────────────────────────── */
+
+.input {
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.input:focus {
+  box-shadow:
+    0 0 0 3px var(--color-neon-dim),
+    0 0 16px rgba(57, 255, 20, 0.1);
+}
+
+/* ─── Logo soft pulse on hover ─────────────────────────────────── */
+
+.logo-link {
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.logo-link:hover {
+  transform: translateY(-1px);
+}
+
+.logo-link:hover img {
+  filter: drop-shadow(0 0 8px var(--color-neon-glow));
+}
+
+/* ─── Reduced motion override ──────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .panel:hover,
+  .panel-lg:hover,
+  .btn-primary:hover:not(:disabled),
+  .btn-ghost:hover:not(:disabled),
+  .logo-link:hover {
+    transform: none;
+  }
+  .link-sweep::after,
+  .section-heading::after,
+  .site-header a::after {
+    transition: none;
+  }
+}

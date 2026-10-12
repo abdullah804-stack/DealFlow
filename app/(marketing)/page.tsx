@@ -173,9 +173,9 @@ export default async function LandingPage() {
             <div className="eyebrow mb-4">The problem</div>
           </Reveal>
           <Reveal delay={100}>
-            <h2 className="text-3xl md:text-5xl font-semibold leading-tight mb-8">
-              There are more startups every day than any investor can track.
-            </h2>
+            <h2 className="section-heading text-3xl md:text-5xl font-semibold leading-tight mb-8">
+  There are more startups every day than any investor can track.
+</h2>
           </Reveal>
           <Reveal delay={200}>
             <p className="text-[var(--color-text-mid)] text-lg leading-relaxed max-w-2xl mx-auto mb-6">
@@ -209,9 +209,9 @@ export default async function LandingPage() {
           <Reveal>
             <div className="text-center mb-16">
               <div className="eyebrow mb-4">How it works</div>
-              <h2 className="text-3xl md:text-4xl font-semibold">
-                Three stages, one pipeline.
-              </h2>
+              <h2 className="section-heading text-3xl md:text-4xl font-semibold">
+  Three stages, one pipeline.
+</h2>
             </div>
           </Reveal>
 
@@ -265,9 +265,9 @@ export default async function LandingPage() {
           <Reveal>
             <div className="text-center mb-16">
               <div className="eyebrow mb-4">The committee</div>
-              <h2 className="text-3xl md:text-4xl font-semibold">
-                Five specialists, one vote.
-              </h2>
+              <h2 className="section-heading text-3xl md:text-4xl font-semibold">
+  Five specialists, one vote.
+</h2>
               <p className="text-[var(--color-text-mid)] mt-4 max-w-2xl mx-auto">
                 Each agent has a distinct mandate and a fixed weight. The
                 rubric is locked — same weights, same thresholds, every run.
@@ -296,11 +296,11 @@ export default async function LandingPage() {
             <Reveal>
               <div>
                 <div className="eyebrow mb-4">Sample output</div>
-                <h2 className="text-3xl md:text-4xl font-semibold mb-6 leading-tight">
-                  Full investment memos,
-                  <br />
-                  written in seconds.
-                </h2>
+                <h2 className="section-heading text-3xl md:text-4xl font-semibold mb-6 leading-tight">
+  Full investment memos,
+  <br />
+  written in seconds.
+</h2>
                 <p className="text-[var(--color-text-mid)] leading-relaxed mb-6">
                   Every escalated candidate gets a VC-memo-style report:
                   executive summary, competitive landscape, technical and
@@ -378,9 +378,9 @@ export default async function LandingPage() {
           <Reveal>
             <div className="text-center mb-16">
               <div className="eyebrow mb-4">Who it&apos;s for</div>
-              <h2 className="text-3xl md:text-4xl font-semibold">
-                Built for the people drowning in deal flow.
-              </h2>
+              <h2 className="section-heading text-3xl md:text-4xl font-semibold">
+  Built for the people drowning in deal flow.
+</h2>
             </div>
           </Reveal>
 
@@ -431,9 +431,9 @@ export default async function LandingPage() {
           <Reveal>
             <div className="text-center mb-16">
               <div className="eyebrow mb-4">Why it&apos;s different</div>
-              <h2 className="text-3xl md:text-4xl font-semibold">
-                A committee, not a chatbot.
-              </h2>
+              <h2 className="section-heading text-3xl md:text-4xl font-semibold">
+  A committee, not a chatbot.
+</h2>
             </div>
           </Reveal>
 
@@ -480,9 +480,9 @@ export default async function LandingPage() {
           <Reveal>
             <div className="text-center mb-16">
               <div className="eyebrow mb-4">FAQ</div>
-              <h2 className="text-3xl md:text-4xl font-semibold">
-                Common questions.
-              </h2>
+              <h2 className="section-heading text-3xl md:text-4xl font-semibold">
+  Common questions.
+</h2>
             </div>
           </Reveal>
 
@@ -529,9 +529,9 @@ export default async function LandingPage() {
             <div className="eyebrow mb-6">Get started</div>
           </Reveal>
           <Reveal delay={100}>
-            <h2 className="text-4xl md:text-6xl font-semibold mb-6 leading-tight">
-              Start with a sample.
-            </h2>
+            <h2 className="section-heading text-4xl md:text-6xl font-semibold mb-6 leading-tight">
+  Start with a sample.
+</h2>
           </Reveal>
           <Reveal delay={200}>
             <p className="text-[var(--color-text-mid)] text-lg mb-10 max-w-lg mx-auto">
