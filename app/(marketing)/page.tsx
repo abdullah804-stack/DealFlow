@@ -429,15 +429,18 @@ function SiteFooter() {
             DealFlow — autonomous VC analyst
           </span>
         </div>
-        <div className="flex items-center gap-6 text-sm text-[var(--color-text-low)]">
+                <div className="flex items-center gap-6 text-sm text-[var(--color-text-low)]">
           <Link href="/methodology" className="hover:text-[var(--color-neon)]">
             Methodology
           </Link>
           <Link href="/sample" className="hover:text-[var(--color-neon)]">
             Sample
           </Link>
-          <Link href="/login" className="hover:text-[var(--color-neon)]">
-            Sign in
+          <Link href="/privacy" className="hover:text-[var(--color-neon)]">
+            Privacy
+          </Link>
+          <Link href="/terms" className="hover:text-[var(--color-neon)]">
+            Terms
           </Link>
         </div>
       </div>
