@@ -34,6 +34,7 @@ export default function LandingPage() {
           </p>
           <div className="flex items-center justify-center gap-4">
             <Link href="/signup" className="btn-primary">Start exploring</Link>
+	    <Link href="/sample" className="btn-ghost">See a sample report</Link>
             <Link href="/methodology" className="btn-ghost">Read the methodology</Link>
           </div>
         </div>
