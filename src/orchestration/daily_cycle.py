@@ -1,6 +1,5 @@
 # src/orchestration/daily_cycle.py
 """
-
 Daily Cycle Orchestration — Runs the full DealFlow pipeline.
 
 Executes:
@@ -10,8 +9,12 @@ Executes:
 4. Committee: Run the Investment Committee debate
 5. Report Generation: Create VC-memo-style reports
 
-All results are stored in memory (structured + vector).
+All results are stored in Postgres.
 Cap: MAX_CANDIDATES_FULL_COMMITTEE_PER_DAY = 3
+
+Guarantee: If validation yields zero committee candidates but at least
+one candidate was validated, the top-ranked candidate is forced through
+anyway. This ensures at least one report per daily run.
 """
 
 import logging
@@ -38,7 +41,7 @@ class DailyCycle:
     """
     Orchestrates the full daily cycle of DealFlow.
     """
-    
+
     def __init__(self):
         self.discovery = DiscoveryAgent()
         self.validation = ValidationAgent()
@@ -46,7 +49,7 @@ class DailyCycle:
         self.moderator = ModeratorAgent()
         self.report_generator = ReportGenerator()
         self.memory = MemoryIntegration()
-        
+
         self.results = {
             "timestamp": None,
             "candidates_found": 0,
@@ -56,57 +59,76 @@ class DailyCycle:
             "reports": [],
             "errors": [],
         }
-    
+
     def run(self) -> Dict[str, Any]:
         """
         Run the full daily cycle.
-        
+
         Returns:
             Dict with complete cycle results
         """
         logger.info("=" * 60)
         logger.info("STARTING DAILY CYCLE")
         logger.info("=" * 60)
-        
+
         self.results["timestamp"] = datetime.now(timezone.utc).isoformat()
-        
+
         # Step 1: Discovery
         logger.info("\n📊 STEP 1: DISCOVERY")
         candidates = self._run_discovery()
         self.results["candidates_found"] = len(candidates)
-        
+
         if not candidates:
             logger.info("No candidates found. Cycle complete.")
             return self.results
-        
+
         # Step 2: Validation
         logger.info("\n📊 STEP 2: VALIDATION")
         validated = self._run_validation(candidates)
         self.results["candidates_validated"] = len(validated.get("validated", []))
-        self.results["candidates_escalated"] = len(validated.get("committee_candidates", []))
-        
+
         committee_candidates = validated.get("committee_candidates", [])
-        
+
+        # Guarantee: if validation yielded zero committee candidates but we
+        # have at least one validated candidate, force the top-ranked one
+        # through anyway. This ensures every daily run produces a report.
         if not committee_candidates:
-            logger.info("No candidates selected for committee. Cycle complete.")
-            return self.results
-        
+            validated_list = validated.get("validated", [])
+            if validated_list:
+                # validated is already sorted by final_confidence descending
+                forced = validated_list[0]
+                forced["selected_for_committee"] = True
+                committee_candidates = [forced]
+                logger.info(
+                    "  ⚠ No candidates cleared the validation threshold. "
+                    f"Forcing top-ranked candidate through: "
+                    f"{forced.get('title', 'Unknown')[:60]} "
+                    f"(score: {forced.get('final_confidence', 0):.1f})"
+                )
+            else:
+                logger.info("No candidates passed validation. Cycle complete.")
+                return self.results
+
+        self.results["candidates_escalated"] = len(committee_candidates)
+
         # Step 3: Committee and Reports (per candidate)
-        logger.info(f"\n📊 STEP 3: COMMITTEE + REPORTS ({len(committee_candidates)} candidates)")
-        
+        logger.info(
+            f"\n📊 STEP 3: COMMITTEE + REPORTS ({len(committee_candidates)} candidates)"
+        )
+
         for candidate in committee_candidates:
             try:
                 result = self._process_candidate(candidate)
                 self.results["committee_candidates"].append(result)
-                
+
                 if "report" in result:
                     self.results["reports"].append(result["report"])
-                
+
             except Exception as e:
                 error_msg = f"Failed to process {candidate.get('title', 'Unknown')}: {e}"
                 logger.error(error_msg)
                 self.results["errors"].append(error_msg)
-        
+
         # Summary
         logger.info("\n" + "=" * 60)
         logger.info("DAILY CYCLE COMPLETE")
@@ -116,9 +138,9 @@ class DailyCycle:
         logger.info(f"  Candidates Escalated: {self.results['candidates_escalated']}")
         logger.info(f"  Reports Generated: {len(self.results['reports'])}")
         logger.info(f"  Errors: {len(self.results['errors'])}")
-        
+
         return self.results
-    
+
     def _run_discovery(self) -> List[Dict[str, Any]]:
         """
         Run the discovery pipeline.
@@ -130,7 +152,7 @@ class DailyCycle:
         except Exception as e:
             logger.error(f"  Discovery failed: {e}")
             return []
-    
+
     def _run_validation(self, candidates: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         Run the validation pipeline.
@@ -144,11 +166,11 @@ class DailyCycle:
         except Exception as e:
             logger.error(f"  Validation failed: {e}")
             return {"validated": [], "shortlist": [], "committee_candidates": []}
-    
+
     def _process_candidate(self, candidate: Dict[str, Any]) -> Dict[str, Any]:
         """
         Process a single candidate through the full pipeline.
-        
+
         Steps:
         1. Build dossier
         2. Run committee
@@ -157,7 +179,7 @@ class DailyCycle:
         """
         title = candidate.get("title", "Unknown")
         logger.info(f"\n  Processing: {title}")
-        
+
         result = {
             "candidate": candidate,
             "dossier": None,
@@ -165,7 +187,7 @@ class DailyCycle:
             "report": None,
             "memory_ids": {},
         }
-        
+
         # Step 1: Build dossier
         try:
             dossier = self.dossier_builder.build_dossier(candidate)
@@ -175,7 +197,7 @@ class DailyCycle:
             logger.error(f"    ❌ Dossier build failed: {e}")
             result["errors"] = [str(e)]
             return result
-        
+
         # Step 2: Save dossier to memory
         try:
             candidate_id = candidate.get("db_id")
@@ -185,17 +207,18 @@ class DailyCycle:
                 logger.info(f"    ✅ Dossier saved (ID: {dossier_id})")
         except Exception as e:
             logger.warning(f"    ⚠️ Failed to save dossier: {e}")
-        
+
         # Step 3: Run committee
         try:
             committee_result = self.moderator.run_committee(dossier)
             result["committee_result"] = committee_result
-            logger.info(f"    ✅ Committee complete: {committee_result.get('vote_result', {}).get('decision', 'N/A')}")
+            decision = committee_result.get("vote_result", {}).get("decision", "N/A")
+            logger.info(f"    ✅ Committee complete: {decision}")
         except Exception as e:
             logger.error(f"    ❌ Committee failed: {e}")
             result["errors"] = result.get("errors", []) + [str(e)]
             return result
-        
+
         # Step 4: Save committee decision to memory
         try:
             vote_result = committee_result.get("vote_result", {})
@@ -213,9 +236,8 @@ class DailyCycle:
                 logger.info(f"    ✅ Decision saved (ID: {decision_id})")
         except Exception as e:
             logger.warning(f"    ⚠️ Failed to save decision: {e}")
-        
-        # Step 5: Generate report (PASS THE CANDIDATE FOR SOURCE INFO)
-                # Step 5: Generate report
+
+        # Step 5: Generate report
         try:
             report = self.report_generator.generate_report(
                 dossier=dossier,
@@ -223,11 +245,15 @@ class DailyCycle:
                 candidate=candidate,
             )
             result["report"] = report
-            logger.info(f"    ✅ Report generated: {report.get('star_rating', 0)} stars")
+            logger.info(
+                f"    ✅ Report generated: {report.get('star_rating', 0)} stars"
+            )
 
             source_info = report.get("source_info", {})
             if source_info:
-                logger.info(f"    📌 Source: {source_info.get('platform_display', 'Unknown')} by {source_info.get('username', 'Unknown')}")
+                platform = source_info.get("platform_display", "Unknown")
+                username = source_info.get("username", "Unknown")
+                logger.info(f"    📌 Source: {platform} by {username}")
 
             # Step 6: Save report to Postgres
             try:
@@ -245,9 +271,9 @@ class DailyCycle:
         except Exception as e:
             logger.error(f"    ❌ Report generation failed: {e}")
             result["errors"] = result.get("errors", []) + [str(e)]
-        
+
         return result
-    
+
     def get_summary(self) -> Dict[str, Any]:
         """
         Get a summary of the last cycle results.
@@ -281,14 +307,14 @@ def run_daily_cycle_with_logging() -> Dict[str, Any]:
     logger.info("=" * 60)
     logger.info("DEALFLOW — DAILY CYCLE")
     logger.info("=" * 60)
-    
+
     start_time = datetime.now(timezone.utc)
     result = run_daily_cycle()
     end_time = datetime.now(timezone.utc)
-    
+
     duration = (end_time - start_time).total_seconds()
     logger.info(f"\n⏱️  Cycle completed in {duration:.2f} seconds")
-    
+
     return result
 
 
@@ -297,42 +323,40 @@ def run_daily_cycle_with_logging() -> Dict[str, Any]:
 # ============================================================================
 
 if __name__ == "__main__":
-    # Quick test
     logging.basicConfig(level=logging.INFO)
-    
+
     print("\n🔍 Testing Daily Cycle...")
     print("⚠️  This will run the full pipeline with real sources.")
     print("    It may take several minutes and will make LLM calls.")
-    
+
     response = input("\nContinue? (y/N): ")
-    if response.lower() != 'y':
+    if response.lower() != "y":
         print("Test cancelled.")
         exit()
-    
-    # Run the daily cycle
+
     result = run_daily_cycle()
-    
+
     print("\n📊 Cycle Results:")
     print(f"  Candidates Found: {result.get('candidates_found', 0)}")
     print(f"  Candidates Validated: {result.get('candidates_validated', 0)}")
     print(f"  Candidates Escalated: {result.get('candidates_escalated', 0)}")
     print(f"  Reports Generated: {len(result.get('reports', []))}")
     print(f"  Errors: {len(result.get('errors', []))}")
-    
-    if result.get('reports'):
+
+    if result.get("reports"):
         print("\n📊 Generated Reports:")
-        for i, report in enumerate(result['reports'], 1):
-            company = report.get('company', 'Unknown')
-            decision = report.get('decision', 'PASS')
-            stars = report.get('star_rating', 0)
-            source_info = report.get('source_info', {})
-            source_display = source_info.get('platform_display', 'Unknown')
-            username = source_info.get('username', 'Unknown')
+        for i, report in enumerate(result["reports"], 1):
+            company = report.get("company", "Unknown")
+            decision = report.get("decision", "PASS")
+            stars = report.get("star_rating", 0)
+            source_info = report.get("source_info", {})
+            source_display = source_info.get("platform_display", "Unknown")
+            username = source_info.get("username", "Unknown")
             print(f"  {i}. {company}: {decision} (⭐{stars}/5) — from {source_display} by {username}")
-    
-    if result.get('errors'):
+
+    if result.get("errors"):
         print("\n⚠️  Errors:")
-        for error in result['errors']:
+        for error in result["errors"]:
             print(f"  - {error[:100]}...")
-    
+
     print("\n✅ Daily cycle test complete!")
