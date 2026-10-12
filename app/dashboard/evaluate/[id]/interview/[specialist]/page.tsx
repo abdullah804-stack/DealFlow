@@ -8,11 +8,13 @@ import {
   AgentSidebar,
   ProgressStrip,
   QuestionCard,
+  type SpecialistProgress,
+} from "@/components/interview/InterviewUI";
+import {
   SPECIALIST_META,
   SPECIALIST_ORDER,
   type SpecialistKey,
-  type SpecialistProgress,
-} from "@/components/interview/InterviewUI";
+} from "@/lib/interview/specialists";
 
 type Turn = {
   id: string;
@@ -103,14 +105,28 @@ export default function SpecialistInterviewPage() {
   const questionIndex = Math.min(answeredCount + 1, 5);
 
   // Redirect to the next specialist when this one is exhausted
+    // If we land on a specialist with no turns and the interview isn't
+  // finished, the client likely has stale data. Refetch once.
+  const [refetchedOnce, setRefetchedOnce] = useState(false);
   useEffect(() => {
     if (!data || !specialist || loading) return;
+    if (thisSpecialistTurns.length === 0 && !refetchedOnce) {
+      setRefetchedOnce(true);
+      load();
+    }
+  }, [data, specialist, thisSpecialistTurns, loading, load, refetchedOnce]);
+
+  // Redirect to the next specialist when this one is exhausted
+  useEffect(() => {
+    if (!data || !specialist || loading) return;
+    // Skip if we haven't gotten a turn yet (may be refetching)
     if (thisSpecialistTurns.length === 0) return;
 
     const allDone = thisSpecialistTurns.every(
       (t) => t.answerText || t.skipped
     );
     if (!allDone) return;
+    // ...
 
     // Find the next specialist that still has work
     const idx = SPECIALIST_ORDER.indexOf(specialist);
@@ -127,35 +143,58 @@ export default function SpecialistInterviewPage() {
     }
   }, [data, specialist, thisSpecialistTurns, loading, router, evaluationId]);
 
-  async function handleSubmit(e: React.FormEvent) {
+      async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!pendingTurn || !answer.trim()) return;
+    if (!pendingTurn || !answer.trim() || submitting) return;
+
+    const turnIndex = pendingTurn.turnIndex;
+    const trimmed = answer.trim();
 
     setSubmitting(true);
     setError("");
+
+    // Optimistically mark this turn as answered so the submit button
+    // disappears immediately and double-clicks are impossible.
+    setData((prev) => {
+      if (!prev?.session) return prev;
+      return {
+        ...prev,
+        session: {
+          ...prev.session,
+          turns: prev.session.turns.map((t) =>
+            t.turnIndex === turnIndex ? { ...t, answerText: trimmed } : t
+          ),
+        },
+      };
+    });
+    setAnswer("");
 
     const res = await fetch(
       `/api/v1/idea-evaluations/${evaluationId}/interview/answer`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          turnIndex: pendingTurn.turnIndex,
-          answerText: answer.trim(),
-        }),
+        body: JSON.stringify({ turnIndex, answerText: trimmed }),
       }
     );
 
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
+      const code = body?.error?.code;
+
+      if (code === "ALREADY_ANSWERED") {
+        await load();
+        setSubmitting(false);
+        return;
+      }
+
       setError(body?.error?.message ?? "Failed to submit answer.");
+      await load(); // restore correct state from server
       setSubmitting(false);
       return;
     }
 
     const body = await res.json();
-    setAnswer("");
-    setSubmitting(false);
 
     if (body.data?.progress?.specialistProgress) {
       setProgress(body.data.progress.specialistProgress);
@@ -167,10 +206,11 @@ export default function SpecialistInterviewPage() {
     }
 
     await load();
+    setSubmitting(false);
   }
 
   async function handleSkip() {
-    if (!pendingTurn) return;
+    if (!pendingTurn || submitting) return;
 
     setSubmitting(true);
     setError("");
@@ -186,13 +226,20 @@ export default function SpecialistInterviewPage() {
 
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
+      const code = body?.error?.code;
+
+      if (code === "ALREADY_ANSWERED") {
+        await load();
+        setSubmitting(false);
+        return;
+      }
+
       setError(body?.error?.message ?? "Failed to skip.");
       setSubmitting(false);
       return;
     }
 
     const body = await res.json();
-    setSubmitting(false);
 
     if (body.data?.progress?.specialistProgress) {
       setProgress(body.data.progress.specialistProgress);
@@ -204,6 +251,7 @@ export default function SpecialistInterviewPage() {
     }
 
     await load();
+    setSubmitting(false);
   }
 
   if (loading) {
