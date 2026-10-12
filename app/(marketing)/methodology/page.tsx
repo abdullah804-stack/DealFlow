@@ -119,9 +119,9 @@ export default function MethodologyPage() {
       <section className="px-8 py-16 border-t border-[var(--color-border-soft)]">
         <div className="max-w-3xl mx-auto">
           <Reveal>
-            <h2 className="text-2xl md:text-3xl font-semibold mb-4">
-              The rubric
-            </h2>
+            <h2 className="section-heading text-2xl md:text-3xl font-semibold mb-4">
+  The rubric
+</h2>
             <p className="text-[var(--color-text-mid)] mb-10 leading-relaxed">
               Each agent scores from 0 to 10. Scores are combined using fixed
               weights. A weighted total of{" "}
@@ -180,9 +180,9 @@ export default function MethodologyPage() {
       <section className="px-8 py-16 border-t border-[var(--color-border-soft)]">
         <div className="max-w-5xl mx-auto">
           <Reveal>
-            <h2 className="text-2xl md:text-3xl font-semibold mb-4">
-              The committee
-            </h2>
+            <h2 className="section-heading text-2xl md:text-3xl font-semibold mb-4">
+  The committee
+</h2>
             <p className="text-[var(--color-text-mid)] mb-10 max-w-2xl leading-relaxed">
               Each agent is a distinct LLM persona with its own system prompt
               and evaluation criteria. They score independently, then reflect
@@ -228,9 +228,9 @@ export default function MethodologyPage() {
       <section className="px-8 py-16 border-t border-[var(--color-border-soft)]">
         <div className="max-w-3xl mx-auto">
           <Reveal>
-            <h2 className="text-2xl md:text-3xl font-semibold mb-4">
-              Fast-path
-            </h2>
+           <h2 className="section-heading text-2xl md:text-3xl font-semibold mb-4">
+  Fast-path
+</h2>
             <p className="text-[var(--color-text-mid)] leading-relaxed mb-8">
               When the committee agrees strongly, a second round is
               unnecessary. The system detects this and skips it.
@@ -299,9 +299,9 @@ export default function MethodologyPage() {
       <section className="px-8 py-16 border-t border-[var(--color-border-soft)]">
         <div className="max-w-3xl mx-auto">
           <Reveal>
-            <h2 className="text-2xl md:text-3xl font-semibold mb-4">
-              Insufficient evidence
-            </h2>
+            <h2 className="section-heading text-2xl md:text-3xl font-semibold mb-4">
+  Insufficient evidence
+</h2>
             <p className="text-[var(--color-text-mid)] leading-relaxed mb-6">
               Sometimes the dossier doesn&apos;t contain enough information to
               make a confident call. Rather than fabricate a score, the
@@ -331,9 +331,9 @@ export default function MethodologyPage() {
       <section className="px-8 py-16 border-t border-[var(--color-border-soft)]">
         <div className="max-w-3xl mx-auto">
           <Reveal>
-            <h2 className="text-2xl md:text-3xl font-semibold mb-4">
-              Limitations
-            </h2>
+            <h2 className="section-heading text-2xl md:text-3xl font-semibold mb-4">
+  Limitations
+</h2>
             <p className="text-[var(--color-text-mid)] leading-relaxed mb-8">
               DealFlow is a research tool, not an investment advisor. We
               prefer to state its boundaries explicitly.

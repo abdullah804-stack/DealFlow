@@ -227,8 +227,7 @@ function Section({
   return (
     <Reveal>
       <section className="panel-lg">
-        <h2 className="text-xl font-semibold mb-4">{title}</h2>
-        <div className="space-y-4 text-sm text-[var(--color-text-mid)] leading-relaxed">
+<h2 className="section-heading text-xl font-semibold mb-4">{title}</h2>        <div className="space-y-4 text-sm text-[var(--color-text-mid)] leading-relaxed">
           {children}
         </div>
       </section>
