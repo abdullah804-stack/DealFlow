@@ -91,7 +91,7 @@ def fetch_subreddit_posts(
         filtered_posts = []
         for post in posts:
             created_utc = post.get("created_utc", 0)
-            created_time = datetime.fromtimestamp(created_utc)
+            created_time = datetime.fromtimestamp(created_utc, tz=timezone.utc)
             if created_time >= cutoff_time:
                 filtered_posts.append(post)
         
@@ -223,7 +223,7 @@ def parse_reddit_post(post: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     score = post.get("score", 0)
     comments_count = post.get("num_comments", 0)
     created_utc = post.get("created_utc", 0)
-    timestamp = datetime.fromtimestamp(created_utc).isoformat() if created_utc else None
+    timestamp = datetime.fromtimestamp(created_utc, tz=timezone.utc).isoformat() if created_utc else None
     
     # Build candidate object
     return {
@@ -353,7 +353,7 @@ def get_reddit_search_results(
             
             # Check age
             created_utc = post.get("created_utc", 0)
-            created_time = datetime.fromtimestamp(created_utc)
+            created_time = datetime.fromtimestamp(created_utc, tz=timezone.utc)
             if created_time < cutoff_time:
                 continue
             

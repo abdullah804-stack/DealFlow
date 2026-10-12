@@ -203,7 +203,7 @@ def parse_rss_entry(entry: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     
     # Extract publication date
     published = entry.get("published_parsed") or entry.get("updated_parsed")
-    timestamp = datetime(*published[:6]).isoformat() if published else None
+    timestamp = datetime(*published[:6], tzinfo=timezone.utc).isoformat() if published else None
     
     # Extract author
     author = entry.get("author") or entry.get("creator") or entry.get("dc:creator") or "unknown"
