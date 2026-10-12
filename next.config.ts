@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const config: NextConfig = {
   reactStrictMode: true,
+  output: "standalone",
   experimental: {
     serverActions: {
       bodySizeLimit: "2mb",
