@@ -445,3 +445,350 @@ input {
   }
   .reveal { opacity: 1; transform: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   AGENT CARD HOVER
+   Neon outline + scan sweep + character lift
+   ═══════════════════════════════════════════════════════════════════ */
+
+.agent-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    border-color 0.35s cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow 0.35s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+  outline: none;
+}
+
+/* Base state — subtle inner shadow (depth) */
+.agent-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  transition: box-shadow 0.35s ease;
+  z-index: 20;
+}
+
+/* Hover / focus: neon border + outer glow + slight lift */
+.agent-card:hover,
+.agent-card:focus-visible {
+  border-color: var(--color-neon);
+  box-shadow:
+    0 0 0 1px var(--color-neon),
+    0 0 24px var(--color-neon-glow),
+    0 0 60px rgba(57, 255, 20, 0.12),
+    0 12px 32px rgba(0, 0, 0, 0.4);
+  transform: translateY(-4px);
+}
+
+.agent-card:hover::before,
+.agent-card:focus-visible::before {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Rotating conic glow ring — appears on hover, sits behind content */
+.agent-card-glow {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(57, 255, 20, 0.35) 40deg,
+    transparent 80deg,
+    transparent 360deg
+  );
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  padding: 1px;
+  z-index: 15;
+}
+
+.agent-card:hover .agent-card-glow,
+.agent-card:focus-visible .agent-card-glow {
+  opacity: 1;
+  animation: agent-glow-spin 3.5s linear infinite;
+}
+
+@keyframes agent-glow-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Scan-line sweep — a bright green horizontal bar that travels
+   down the card on hover */
+.agent-card-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  top: -2px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-neon),
+    transparent
+  );
+  opacity: 0;
+  filter: blur(0.5px);
+  box-shadow: 0 0 12px var(--color-neon-glow);
+  pointer-events: none;
+  z-index: 18;
+}
+
+.agent-card:hover .agent-card-scan,
+.agent-card:focus-visible .agent-card-scan {
+  opacity: 1;
+  animation: agent-scan 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes agent-scan {
+  0% {
+    top: -2px;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: calc(100% + 2px);
+    opacity: 0;
+  }
+}
+
+/* Character lifts slightly on hover (subtle float) */
+.agent-card-image {
+  transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.agent-card:hover .agent-card-image,
+.agent-card:focus-visible .agent-card-image {
+  transform: translateY(-6px) scale(1.02);
+}
+
+/* Reduced motion: keep the outline but drop the movement */
+@media (prefers-reduced-motion: reduce) {
+  .agent-card:hover,
+  .agent-card:focus-visible {
+    transform: none;
+  }
+  .agent-card:hover .agent-card-glow,
+  .agent-card:focus-visible .agent-card-glow,
+  .agent-card:hover .agent-card-scan,
+  .agent-card:focus-visible .agent-card-scan {
+    animation: none;
+    opacity: 0;
+  }
+  .agent-card:hover .agent-card-image,
+  .agent-card:focus-visible .agent-card-image {
+    transform: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   LANDING PAGE ANIMATION UTILITIES
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Ambient glow orbs — big soft radial blobs behind sections */
+.glow-orb {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  filter: blur(80px);
+  opacity: 0.35;
+  z-index: 0;
+}
+
+.glow-orb-neon {
+  background: radial-gradient(
+    circle,
+    rgba(57, 255, 20, 0.5) 0%,
+    transparent 70%
+  );
+}
+
+.glow-orb-red {
+  background: radial-gradient(
+    circle,
+    rgba(255, 45, 85, 0.4) 0%,
+    transparent 70%
+  );
+}
+
+.glow-orb-violet {
+  background: radial-gradient(
+    circle,
+    rgba(180, 122, 255, 0.4) 0%,
+    transparent 70%
+  );
+}
+
+/* Slowly drifting animation for orbs */
+@keyframes orb-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(20px, -30px) scale(1.1);
+  }
+}
+
+.glow-orb-animate {
+  animation: orb-drift 14s ease-in-out infinite;
+}
+
+/* Text shimmer — green light sweeping across text */
+@keyframes text-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.text-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-text-hi) 0%,
+    var(--color-neon) 50%,
+    var(--color-text-hi) 100%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: text-shimmer 4s linear infinite;
+}
+
+/* Pulsing glow dot */
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--color-neon-glow);
+  }
+  50% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2.4s ease-in-out infinite;
+}
+
+/* Section divider beam — horizontal neon line with animation */
+.border-beam {
+  position: relative;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-neon),
+    transparent
+  );
+  opacity: 0.4;
+}
+
+/* Animated stat counter glow on hover */
+.stat-glow {
+  transition: text-shadow 0.3s ease, color 0.3s ease;
+}
+
+.stat-glow:hover {
+  text-shadow: 0 0 24px var(--color-neon-glow);
+}
+
+/* Slow float for decorative elements */
+@keyframes slow-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.slow-float {
+  animation: slow-float 4s ease-in-out infinite;
+}
+
+/* Staggered fade-in for lists */
+@keyframes stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stagger-in {
+  animation: stagger-in 0.5s ease-out both;
+}
+
+/* Transparent header that solidifies on scroll */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  transition: background-color 0.3s ease, backdrop-filter 0.3s ease,
+    border-color 0.3s ease;
+  border-bottom: 1px solid transparent;
+}
+
+.site-header-transparent {
+  background: transparent;
+  backdrop-filter: none;
+  border-bottom-color: transparent;
+}
+
+.site-header-solid {
+  background: rgba(5, 5, 5, 0.75);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border-bottom-color: var(--color-border-soft);
+}
+
+/* Reduced motion: disable decorative animations */
+@media (prefers-reduced-motion: reduce) {
+  .glow-orb-animate,
+  .text-shimmer,
+  .pulse-glow,
+  .slow-float,
+  .stagger-in {
+    animation: none !important;
+  }
+  .text-shimmer {
+    -webkit-text-fill-color: var(--color-text-hi);
+    color: var(--color-text-hi);
+  }
+}

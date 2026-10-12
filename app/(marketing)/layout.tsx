@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Logo } from "@/components/Logo";
+import { SiteHeader } from "@/components/SiteHeader";
 
 export default function MarketingLayout({
   children,
@@ -9,29 +9,7 @@ export default function MarketingLayout({
 }) {
   return (
     <div className="relative z-10">
-      <nav className="flex items-center justify-between px-8 py-6 border-b border-[var(--color-border-soft)]">
-        <Logo />
-        <div className="flex items-center gap-3">
-          <Link
-            href="/methodology"
-            className="hidden md:inline text-sm text-[var(--color-text-mid)] hover:text-[var(--color-neon)]"
-          >
-            Methodology
-          </Link>
-          <Link
-            href="/sample"
-            className="hidden md:inline text-sm text-[var(--color-text-mid)] hover:text-[var(--color-neon)]"
-          >
-            Sample
-          </Link>
-          <Link href="/login" className="btn-ghost">
-            Sign in
-          </Link>
-          <Link href="/signup" className="btn-primary">
-            Get started
-          </Link>
-        </div>
-      </nav>
+      <SiteHeader />
 
       {children}
 
