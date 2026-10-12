@@ -1,6 +1,8 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { Logo } from "@/components/Logo";
 
 export const dynamic = "force-dynamic";
 
@@ -60,17 +62,9 @@ export default async function SampleReportPage({
   return (
     <main className="relative z-10 min-h-screen">
       <nav className="flex items-center justify-between px-8 py-6 border-b border-[var(--color-border-soft)]">
-        <Link href="/" className="flex items-center gap-3">
-          <span className="text-[var(--color-teal)] text-xl">⬡</span>
-          <div className="flex flex-col leading-tight">
-            <span className="font-bold text-[15px]">DealFlow</span>
-            <span className="font-mono text-[10px] text-[var(--color-text-low)] uppercase tracking-wider">
-              deal intelligence
-            </span>
-          </div>
-        </Link>
+        <Logo />
         <div className="flex items-center gap-3">
-          <span className="text-xs text-[var(--color-text-low)] font-mono">
+          <span className="hidden md:inline text-xs text-[var(--color-text-low)] font-mono uppercase tracking-wider">
             Public sample
           </span>
           <Link href="/signup" className="btn-primary text-sm">
@@ -113,13 +107,17 @@ export default async function SampleReportPage({
             <div className="text-sm space-y-1">
               {sourceInfo.platform_display && (
                 <div>
-                  <span className="text-[var(--color-text-low)]">Platform: </span>
+                  <span className="text-[var(--color-text-low)]">
+                    Platform:{" "}
+                  </span>
                   {sourceInfo.platform_display}
                 </div>
               )}
               {sourceInfo.username && (
                 <div>
-                  <span className="text-[var(--color-text-low)]">Author: </span>
+                  <span className="text-[var(--color-text-low)]">
+                    Author:{" "}
+                  </span>
                   {sourceInfo.username}
                 </div>
               )}
@@ -130,7 +128,7 @@ export default async function SampleReportPage({
                     href={sourceInfo.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[var(--color-teal)] hover:underline break-all"
+                    className="text-[var(--color-neon)] hover:underline break-all"
                   >
                     {sourceInfo.url}
                   </a>
@@ -156,7 +154,7 @@ export default async function SampleReportPage({
           {typeof probability === "number" && (
             <div className="stat-card">
               <div className="stat-index">Est. success</div>
-              <div className="stat-number text-[var(--color-teal)]">
+              <div className="stat-number text-[var(--color-neon)]">
                 {probability}%
               </div>
               <div className="stat-label">LLM estimate</div>
@@ -177,7 +175,7 @@ export default async function SampleReportPage({
           <div className="grid grid-cols-2 gap-4 mb-8">
             {biggestAdvantage && (
               <div className="panel">
-                <div className="eyebrow text-[var(--color-teal)]">
+                <div className="eyebrow text-[var(--color-neon)]">
                   Biggest advantage
                 </div>
                 <p className="text-sm text-[var(--color-text-hi)] leading-relaxed">
@@ -187,7 +185,7 @@ export default async function SampleReportPage({
             )}
             {biggestRisk && (
               <div className="panel">
-                <div className="eyebrow text-[var(--color-coral)]">
+                <div className="eyebrow text-[var(--color-neon-red)]">
                   Biggest risk
                 </div>
                 <p className="text-sm text-[var(--color-text-hi)] leading-relaxed">
@@ -238,10 +236,35 @@ export default async function SampleReportPage({
         </div>
       </div>
 
-      <footer className="px-8 py-6 border-t border-[var(--color-border-soft)] text-center mt-12">
-        <p className="text-[var(--color-text-low)] text-xs">
+      <footer className="px-8 py-10 border-t border-[var(--color-border-soft)] mt-12">
+        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Image
+              src="/logo.png"
+              alt="DealFlow"
+              width={24}
+              height={24}
+              className="rounded"
+            />
+            <span className="text-sm text-[var(--color-text-low)]">
+              DealFlow — autonomous VC analyst
+            </span>
+          </div>
+          <div className="flex items-center gap-6 text-sm text-[var(--color-text-low)]">
+            <Link href="/methodology" className="hover:text-[var(--color-neon)]">
+              Methodology
+            </Link>
+            <Link href="/privacy" className="hover:text-[var(--color-neon)]">
+              Privacy
+            </Link>
+            <Link href="/terms" className="hover:text-[var(--color-neon)]">
+              Terms
+            </Link>
+          </div>
+        </div>
+        <div className="max-w-4xl mx-auto mt-6 text-center text-xs text-[var(--color-text-low)] font-mono">
           All predictions are LLM-generated estimates, not financial advice.
-        </p>
+        </div>
       </footer>
     </main>
   );
