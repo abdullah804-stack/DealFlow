@@ -1,285 +1,297 @@
 import React from "react";
-import { StyleSheet, Text, View, Page, Font } from "@react-pdf/renderer";
-
-// Register React-PDF's built-in Helvetica family explicitly.
-// Without this, @react-pdf/renderer v4 sometimes fails with
-// "Cannot read properties of undefined (reading 'unitsPerEm')"
-// because the internal font metrics lookup returns undefined.
-Font.register({
-  family: "Helvetica",
-  fonts: [
-    { src: "Helvetica" },
-    { src: "Helvetica-Bold", fontWeight: "bold" },
-    { src: "Helvetica-Oblique", fontStyle: "italic" },
-    { src: "Helvetica-BoldOblique", fontWeight: "bold", fontStyle: "italic" },
-  ],
-});
+import { StyleSheet, Text, View, Image } from "@react-pdf/renderer";
 
 /**
- * Shared styling and components for report PDFs.
+ * PDF primitives — matching the web theme's neon green + near-black
+ * accent palette, but rendered as a light document (white background,
+ * dark text) for printability.
  *
- * Uses only the built-in Helvetica family to avoid fetching Google fonts
- * at render time (which breaks in Vercel serverless). The visual identity
- * stays close to the web app's teal/coral palette via accent colors.
+ * Uses @react-pdf/renderer's built-in Helvetica family. Do not import
+ * CSS variables or Tailwind — this module runs outside the browser.
  */
 
-// ─── Colors (mirror of app/globals.css) ────────────────────────────
+// ─── Accent colors (hardcoded hex — mirrors app/globals.css) ──────
 
-export const COLORS = {
-  bg: "#090b10",
-  panel: "#12151d",
-  border: "#232733",
-  textHi: "#eef1f6",
-  textMid: "#9aa3b5",
-  textLow: "#5c6577",
-  teal: "#3fe0c2",
-  coral: "#f1667c",
-  amber: "#f0ad5c",
-  blue: "#5b9cf6",
-  violet: "#9b8cf9",
+export const PDF_COLORS = {
+  neon: "#39ff14",
+  neonDim: "#c8f5b8",
+  red: "#ff2d55",
+  redDim: "#ffd6dd",
+  amber: "#d68a26",
+  textHi: "#0a0a0a",
+  textMid: "#40444d",
+  textLow: "#7a7f8a",
+  border: "#e2e5eb",
+  surface: "#f7f8fa",
   white: "#ffffff",
-  black: "#000000",
+};
+
+// ─── Typography scale (spacious, not congested) ───────────────────
+
+export const PDF_TYPE = {
+  h1: 26,
+  h2: 15,
+  h3: 11,
+  body: 10.5,
+  meta: 9,
+  small: 8,
+  lineHeight: 1.6,
 };
 
 // ─── Stylesheet ────────────────────────────────────────────────────
-function formatDecisionLabel(decision: string): string {
-  if (decision === "INSUFFICIENT_EVIDENCE") return "PARTIAL";
-  if (decision === "INVEST") return "INVEST";
-  if (decision === "PASS") return "PASS";
-  return decision;
-}
+
 export const styles = StyleSheet.create({
   page: {
-    padding: 48,
-    backgroundColor: COLORS.white,
+    paddingTop: 56,
+    paddingBottom: 60,
+    paddingHorizontal: 56,
+    backgroundColor: PDF_COLORS.white,
     fontFamily: "Helvetica",
-    fontSize: 10,
-    color: "#1a1a1a",
-    lineHeight: 1.5,
+    fontSize: PDF_TYPE.body,
+    color: PDF_COLORS.textMid,
+    lineHeight: PDF_TYPE.lineHeight,
   },
+
+  // Header
   headerRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 24,
-    paddingBottom: 16,
+    alignItems: "center",
+    marginBottom: 28,
+    paddingBottom: 18,
     borderBottomWidth: 2,
-    borderBottomColor: COLORS.teal,
+    borderBottomColor: PDF_COLORS.neon,
+    gap: 14,
+  },
+  logo: {
+    width: 36,
+    height: 36,
+  },
+  brandBlock: {
+    flexDirection: "column",
+    justifyContent: "center",
   },
   brand: {
-    fontSize: 9,
+    fontSize: 12,
     fontFamily: "Helvetica-Bold",
-    color: COLORS.teal,
-    letterSpacing: 1.5,
-  },
-  brandSub: {
-    fontSize: 7,
-    color: COLORS.textLow,
-    marginTop: 2,
+    color: PDF_COLORS.textHi,
     letterSpacing: 0.5,
   },
-  title: {
-    fontSize: 22,
-    fontFamily: "Helvetica-Bold",
-    color: "#0a0a0a",
-    marginBottom: 4,
+  brandSub: {
+    fontSize: PDF_TYPE.small,
+    color: PDF_COLORS.textLow,
+    letterSpacing: 1,
+    marginTop: 2,
+    textTransform: "uppercase",
   },
-  meta: {
-    fontSize: 8,
-    color: "#666",
-    marginTop: 4,
+  badgeWrap: {
+    marginLeft: "auto",
   },
-    badge: {
+  badge: {
     paddingVertical: 5,
     paddingHorizontal: 12,
-    borderRadius: 12,
-    fontSize: 8,
+    borderRadius: 20,
+    fontSize: PDF_TYPE.small,
     fontFamily: "Helvetica-Bold",
-    letterSpacing: 0.3,
-    textAlign: "center",
+    letterSpacing: 0.5,
   },
   badgeInvest: {
-    backgroundColor: "#d1f5ed",
-    color: "#0d7d68",
+    backgroundColor: PDF_COLORS.neonDim,
+    color: "#1a5c00",
   },
   badgePass: {
-    backgroundColor: "#fde2e6",
-    color: "#b13a4d",
+    backgroundColor: PDF_COLORS.redDim,
+    color: "#8c0d24",
   },
   badgeNeutral: {
-    backgroundColor: "#e8ebf0",
-    color: "#4a5364",
+    backgroundColor: "#e6e9ee",
+    color: "#3a3f4a",
+  },
+
+  // Title
+  title: {
+    fontSize: PDF_TYPE.h1,
+    fontFamily: "Helvetica-Bold",
+    color: PDF_COLORS.textHi,
+    marginBottom: 6,
+    lineHeight: 1.15,
+  },
+  meta: {
+    fontSize: PDF_TYPE.meta,
+    color: PDF_COLORS.textLow,
+    marginBottom: 24,
   },
 
   // Stat grid
   statGrid: {
     flexDirection: "row",
     gap: 12,
-    marginTop: 20,
-    marginBottom: 24,
+    marginBottom: 28,
   },
   statCard: {
     flex: 1,
-    padding: 14,
+    padding: 16,
     borderWidth: 1,
-    borderColor: "#e2e5eb",
-    borderRadius: 6,
-    backgroundColor: "#fafbfc",
+    borderColor: PDF_COLORS.border,
+    borderRadius: 8,
+    backgroundColor: PDF_COLORS.surface,
   },
   statLabel: {
-    fontSize: 7,
-    color: "#888",
+    fontSize: PDF_TYPE.small,
+    color: PDF_COLORS.textLow,
     letterSpacing: 0.8,
-    textTransform: "uppercase",
-    marginBottom: 6,
-  },
-  statValue: {
-    fontSize: 18,
-    fontFamily: "Helvetica-Bold",
-    color: "#0a0a0a",
-  },
-  statSub: {
-    fontSize: 7,
-    color: "#888",
-    marginTop: 4,
-  },
-
-  // Headline boxes (advantage/risk)
-  highlightRow: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 24,
-  },
-  highlightBox: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 6,
-    borderWidth: 1,
-  },
-  highlightAdvantage: {
-    backgroundColor: "#effaf7",
-    borderColor: "#a7e4d6",
-  },
-  highlightRisk: {
-    backgroundColor: "#fef1f3",
-    borderColor: "#f5b8c4",
-  },
-  highlightLabel: {
-    fontSize: 8,
-    fontFamily: "Helvetica-Bold",
-    letterSpacing: 0.8,
-    marginBottom: 6,
-    textTransform: "uppercase",
-  },
-  highlightBody: {
-    fontSize: 9,
-    lineHeight: 1.5,
-    color: "#1a1a1a",
-  },
-
-  // Section
-  section: {
-    marginBottom: 18,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontFamily: "Helvetica-Bold",
-    color: "#0a0a0a",
-    marginBottom: 6,
-    paddingBottom: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e2e5eb",
-  },
-  sectionBody: {
-    fontSize: 10,
-    lineHeight: 1.55,
-    color: "#2a2a2a",
-  },
-
-  // Committee
-  committeeBox: {
-    padding: 14,
-    backgroundColor: "#f7f8fa",
-    borderRadius: 6,
-    marginBottom: 18,
-  },
-  committeeLabel: {
-    fontSize: 8,
-    fontFamily: "Helvetica-Bold",
-    letterSpacing: 0.8,
-    color: "#666",
     textTransform: "uppercase",
     marginBottom: 8,
   },
-  committeeRow: {
+  statValue: {
+    fontSize: 22,
+    fontFamily: "Helvetica-Bold",
+    color: PDF_COLORS.textHi,
+    lineHeight: 1.1,
+  },
+  statSub: {
+    fontSize: PDF_TYPE.small,
+    color: PDF_COLORS.textLow,
+    marginTop: 6,
+  },
+
+  // Highlights (advantage / risk)
+  highlightRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 4,
-    fontSize: 9,
+    gap: 12,
+    marginBottom: 28,
+  },
+  highlightBox: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  highlightAdvantage: {
+    backgroundColor: "#f3fef0",
+    borderColor: "#b8e9a5",
+  },
+  highlightRisk: {
+    backgroundColor: "#fff1f4",
+    borderColor: "#f5b8c4",
+  },
+  highlightLabel: {
+    fontSize: PDF_TYPE.small,
+    fontFamily: "Helvetica-Bold",
+    letterSpacing: 0.8,
+    marginBottom: 8,
+    textTransform: "uppercase",
+  },
+  highlightBody: {
+    fontSize: PDF_TYPE.body,
+    lineHeight: 1.55,
+    color: PDF_COLORS.textHi,
+  },
+
+  // Sections
+  section: {
+    marginBottom: 22,
+  },
+  sectionTitle: {
+    fontSize: PDF_TYPE.h2,
+    fontFamily: "Helvetica-Bold",
+    color: PDF_COLORS.textHi,
+    marginBottom: 8,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: PDF_COLORS.border,
+  },
+  sectionBody: {
+    fontSize: PDF_TYPE.body,
+    lineHeight: 1.65,
+    color: PDF_COLORS.textMid,
+  },
+
+  // Committee block
+  committeeBox: {
+    padding: 16,
+    backgroundColor: PDF_COLORS.surface,
+    borderRadius: 8,
+    marginBottom: 22,
+  },
+  committeeLabel: {
+    fontSize: PDF_TYPE.small,
+    fontFamily: "Helvetica-Bold",
+    letterSpacing: 0.8,
+    color: PDF_COLORS.textLow,
+    textTransform: "uppercase",
+    marginBottom: 10,
+  },
+  committeeRow: {
+    fontSize: PDF_TYPE.body,
+    color: PDF_COLORS.textMid,
+    marginBottom: 6,
+    lineHeight: 1.5,
   },
 
   // Source info
   sourceBox: {
-    padding: 10,
-    backgroundColor: "#f7f8fa",
-    borderRadius: 4,
-    marginBottom: 16,
+    padding: 14,
+    backgroundColor: PDF_COLORS.surface,
+    borderRadius: 6,
+    marginBottom: 22,
   },
   sourceLabel: {
-    fontSize: 8,
-    color: "#888",
+    fontSize: PDF_TYPE.small,
+    color: PDF_COLORS.textLow,
     fontFamily: "Helvetica-Bold",
-    letterSpacing: 0.5,
+    letterSpacing: 0.6,
     textTransform: "uppercase",
-    marginBottom: 4,
+    marginBottom: 6,
   },
   sourceValue: {
-    fontSize: 9,
-    color: "#2a2a2a",
-    marginBottom: 2,
+    fontSize: PDF_TYPE.body,
+    color: PDF_COLORS.textHi,
+    marginBottom: 4,
+    lineHeight: 1.5,
   },
 
   // Footer
   footer: {
     position: "absolute",
     bottom: 30,
-    left: 48,
-    right: 48,
-    paddingTop: 10,
+    left: 56,
+    right: 56,
+    paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "#e2e5eb",
-    fontSize: 7,
-    color: "#888",
+    borderTopColor: PDF_COLORS.border,
+    fontSize: PDF_TYPE.small,
+    color: PDF_COLORS.textLow,
     flexDirection: "row",
     justifyContent: "space-between",
-  },
-  footerPage: {
-    textAlign: "right",
   },
 
   // Disclaimer
   disclaimer: {
-    marginTop: 24,
-    paddingTop: 12,
+    marginTop: 28,
+    paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: "#e2e5eb",
-    fontSize: 8,
-    color: "#888",
+    borderTopColor: PDF_COLORS.border,
+    fontSize: PDF_TYPE.small,
+    color: PDF_COLORS.textLow,
     fontStyle: "italic",
-    lineHeight: 1.4,
+    lineHeight: 1.5,
   },
 });
 
 // ─── Components ────────────────────────────────────────────────────
 
+const DECISION_LABELS: Record<string, string> = {
+  INVEST: "INVEST",
+  PASS: "PASS",
+  INSUFFICIENT_EVIDENCE: "PARTIAL",
+};
+
 export function ReportHeader({
-  title,
+  logoDataUrl,
   decision,
-  meta,
 }: {
-  title: string;
+  logoDataUrl: string;
   decision?: string;
-  meta?: string;
 }) {
   const badgeStyle =
     decision === "INVEST"
@@ -290,21 +302,34 @@ export function ReportHeader({
 
   return (
     <View style={styles.headerRow}>
-      <View style={{ width: 100 }}>
-        <Text style={styles.brand}>DEALFLOW</Text>
-        <Text style={styles.brandSub}>DEAL INTELLIGENCE</Text>
-      </View>
-      <View style={{ flex: 1, paddingHorizontal: 12 }}>
-        <Text style={styles.title}>{title}</Text>
-        {meta && <Text style={styles.meta}>{meta}</Text>}
+      {/* eslint-disable-next-line jsx-a11y/alt-text */}
+      <Image src={logoDataUrl} style={styles.logo} />
+      <View style={styles.brandBlock}>
+        <Text style={styles.brand}>DealFlow</Text>
+        <Text style={styles.brandSub}>Deal Intelligence</Text>
       </View>
       {decision && (
-        <View style={{ width: 110, alignItems: "flex-end" }}>
+        <View style={styles.badgeWrap}>
           <Text style={[styles.badge, badgeStyle]}>
-            {formatDecisionLabel(decision)}
+            {DECISION_LABELS[decision] ?? decision}
           </Text>
         </View>
       )}
+    </View>
+  );
+}
+
+export function TitleBlock({
+  title,
+  meta,
+}: {
+  title: string;
+  meta: string;
+}) {
+  return (
+    <View>
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.meta}>{meta}</Text>
     </View>
   );
 }
@@ -329,7 +354,9 @@ export function StatGrid({
       <View style={styles.statCard} key="stars">
         <Text style={styles.statLabel}>Rating</Text>
         <Text style={styles.statValue}>{stars}/5</Text>
-        <Text style={styles.statSub}>{"★".repeat(stars) + "☆".repeat(5 - stars)}</Text>
+        <Text style={styles.statSub}>
+          {"★".repeat(stars) + "☆".repeat(5 - stars)}
+        </Text>
       </View>
     );
   }
@@ -354,12 +381,12 @@ export function StatGrid({
     );
   }
 
-  if (typeof weightedScore === "number") {
+  if (typeof weightedScore === "number" && cells.length < 3) {
     cells.push(
       <View style={styles.statCard} key="score">
-        <Text style={styles.statLabel}>Score</Text>
+        <Text style={styles.statLabel}>Weighted</Text>
         <Text style={styles.statValue}>{weightedScore.toFixed(2)}</Text>
-        <Text style={styles.statSub}>/10 weighted</Text>
+        <Text style={styles.statSub}>/10</Text>
       </View>
     );
   }
@@ -381,7 +408,7 @@ export function HighlightRow({
     <View style={styles.highlightRow}>
       {advantage && (
         <View style={[styles.highlightBox, styles.highlightAdvantage]}>
-          <Text style={[styles.highlightLabel, { color: "#0d7d68" }]}>
+          <Text style={[styles.highlightLabel, { color: "#1a5c00" }]}>
             Biggest advantage
           </Text>
           <Text style={styles.highlightBody}>{advantage}</Text>
@@ -389,7 +416,7 @@ export function HighlightRow({
       )}
       {risk && (
         <View style={[styles.highlightBox, styles.highlightRisk]}>
-          <Text style={[styles.highlightLabel, { color: "#b13a4d" }]}>
+          <Text style={[styles.highlightLabel, { color: "#8c0d24" }]}>
             Biggest risk
           </Text>
           <Text style={styles.highlightBody}>{risk}</Text>
@@ -408,7 +435,7 @@ export function Section({
 }) {
   if (!body || !body.trim()) return null;
   return (
-    <View style={styles.section}>
+    <View style={styles.section} wrap={false}>
       <Text style={styles.sectionTitle}>{title}</Text>
       <Text style={styles.sectionBody}>{body}</Text>
     </View>
@@ -420,17 +447,15 @@ export function Disclaimer({ text }: { text?: string }) {
   return <Text style={styles.disclaimer}>{text}</Text>;
 }
 
-export function ReportFooter({
-  generatedAt,
-}: {
-  generatedAt: string;
-}) {
+export function ReportFooter({ generatedAt }: { generatedAt: string }) {
   return (
     <View style={styles.footer} fixed>
       <Text>DealFlow — autonomous VC analyst</Text>
-      <Text style={styles.footerPage} render={({ pageNumber, totalPages }) =>
-        `Generated ${generatedAt.slice(0, 10)} · Page ${pageNumber} of ${totalPages}`
-      } />
+      <Text
+        render={({ pageNumber, totalPages }) =>
+          `Generated ${generatedAt.slice(0, 10)}  ·  Page ${pageNumber} of ${totalPages}`
+        }
+      />
     </View>
   );
 }

@@ -3,6 +3,7 @@ import { Document, Page, Text, View } from "@react-pdf/renderer";
 import {
   styles,
   ReportHeader,
+  TitleBlock,
   StatGrid,
   HighlightRow,
   Section,
@@ -14,12 +15,6 @@ import {
   type ReportJson,
   type ReportSectionKey,
 } from "../schema";
-
-/**
- * Founder report PDF — the user-submitted idea evaluation.
- * Same 10-section structure as discovery, but framed as feedback to the
- * founder rather than a memo to a partner.
- */
 
 const SECTION_TITLES: Record<ReportSectionKey, string> = {
   executive_summary: "Executive Summary",
@@ -34,7 +29,13 @@ const SECTION_TITLES: Record<ReportSectionKey, string> = {
   recommendation: "Recommendation",
 };
 
-export function FounderReportPdf({ report }: { report: ReportJson }) {
+export function FounderReportPdf({
+  report,
+  logoDataUrl,
+}: {
+  report: ReportJson;
+  logoDataUrl: string;
+}) {
   return (
     <Document
       title={`${report.company} — Idea Evaluation`}
@@ -43,9 +44,10 @@ export function FounderReportPdf({ report }: { report: ReportJson }) {
       creator="DealFlow"
     >
       <Page size="A4" style={styles.page} wrap>
-                <ReportHeader
+        <ReportHeader logoDataUrl={logoDataUrl} decision={report.decision} />
+
+        <TitleBlock
           title={report.company}
-          decision={report.decision}
           meta={[
             "Idea evaluation",
             report.generatedAt.slice(0, 10),
@@ -57,7 +59,7 @@ export function FounderReportPdf({ report }: { report: ReportJson }) {
               : null,
           ]
             .filter(Boolean)
-            .join("  ·  ")}
+            .join("   ·   ")}
         />
 
         <View style={styles.sourceBox}>
@@ -68,7 +70,7 @@ export function FounderReportPdf({ report }: { report: ReportJson }) {
           </Text>
         </View>
 
-                <StatGrid
+        <StatGrid
           stars={report.star_rating}
           probability={report.probability_of_success_pct}
           checkSize={report.recommended_check_size}
@@ -93,12 +95,13 @@ export function FounderReportPdf({ report }: { report: ReportJson }) {
                 Where the Committee Disagreed
               </Text>
               {report.committee.disagreements.map((d, i) => (
-                <View key={i} style={{ marginBottom: 8 }}>
+                <View key={i} style={{ marginBottom: 10 }}>
                   <Text
                     style={{
-                      fontSize: 9,
+                      fontSize: 10.5,
                       fontFamily: "Helvetica-Bold",
-                      marginBottom: 4,
+                      color: "#0a0a0a",
+                      marginBottom: 6,
                     }}
                   >
                     {d.topic}

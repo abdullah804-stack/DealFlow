@@ -3,6 +3,7 @@ import { Document, Page, Text, View } from "@react-pdf/renderer";
 import {
   styles,
   ReportHeader,
+  TitleBlock,
   StatGrid,
   HighlightRow,
   Section,
@@ -14,11 +15,6 @@ import {
   type ReportJson,
   type ReportSectionKey,
 } from "../schema";
-
-/**
- * Discovery report PDF — the 11-section VC memo format.
- * Renders from stored ReportJson, never from a fresh AI call.
- */
 
 const SECTION_TITLES: Record<ReportSectionKey, string> = {
   executive_summary: "Executive Summary",
@@ -33,7 +29,13 @@ const SECTION_TITLES: Record<ReportSectionKey, string> = {
   recommendation: "Recommendation",
 };
 
-export function DiscoveryReportPdf({ report }: { report: ReportJson }) {
+export function DiscoveryReportPdf({
+  report,
+  logoDataUrl,
+}: {
+  report: ReportJson;
+  logoDataUrl: string;
+}) {
   const sourceInfo = report.source_info;
 
   return (
@@ -44,21 +46,21 @@ export function DiscoveryReportPdf({ report }: { report: ReportJson }) {
       creator="DealFlow"
     >
       <Page size="A4" style={styles.page} wrap>
-                <ReportHeader
+        <ReportHeader logoDataUrl={logoDataUrl} decision={report.decision} />
+
+        <TitleBlock
           title={report.company}
-          decision={report.decision}
           meta={[
-            "Idea evaluation",
             report.generatedAt.slice(0, 10),
             report.weighted_score
-              ? `Score: ${report.weighted_score.toFixed(2)}/10`
+              ? `Weighted score: ${report.weighted_score.toFixed(2)}/10`
               : null,
-            report.decision === "INSUFFICIENT_EVIDENCE"
-              ? "Committee lacked sufficient evidence for a definitive call"
+            report.committee?.rubricVersion
+              ? `Rubric v${report.committee.rubricVersion}`
               : null,
           ]
             .filter(Boolean)
-            .join("  ·  ")}
+            .join("   ·   ")}
         />
 
         {sourceInfo && (
@@ -80,7 +82,7 @@ export function DiscoveryReportPdf({ report }: { report: ReportJson }) {
           </View>
         )}
 
-                <StatGrid
+        <StatGrid
           stars={report.star_rating}
           probability={report.probability_of_success_pct}
           checkSize={report.recommended_check_size}
@@ -105,12 +107,13 @@ export function DiscoveryReportPdf({ report }: { report: ReportJson }) {
                 Committee Disagreements
               </Text>
               {report.committee.disagreements.map((d, i) => (
-                <View key={i} style={{ marginBottom: 8 }}>
+                <View key={i} style={{ marginBottom: 10 }}>
                   <Text
                     style={{
-                      fontSize: 9,
+                      fontSize: 10.5,
                       fontFamily: "Helvetica-Bold",
-                      marginBottom: 4,
+                      color: "#0a0a0a",
+                      marginBottom: 6,
                     }}
                   >
                     {d.topic}

@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { ReportJsonSchema, type ReportJson } from "./schema";
 import { DiscoveryReportPdf } from "./templates/discovery";
 import { FounderReportPdf } from "./templates/founder";
-
+import { getLogoDataUrl } from "./logo";
 /**
  * Renders a stored report JSON to PDF and uploads it to Vercel Blob.
  * Idempotent: if the row already has a pdfBlobUrl AND the content hash
@@ -52,11 +52,14 @@ export async function generateReportPdf(
     };
   }
 
+    // Load logo for the header
+  const logoDataUrl = await getLogoDataUrl();
+
   // Render to PDF buffer
   const template =
     report.subjectType === "idea_evaluation"
-      ? FounderReportPdf({ report })
-      : DiscoveryReportPdf({ report });
+      ? FounderReportPdf({ report, logoDataUrl })
+      : DiscoveryReportPdf({ report, logoDataUrl });
 
   const buffer = await renderToBuffer(template);
 
