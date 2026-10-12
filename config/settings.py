@@ -34,8 +34,9 @@ DATA_DIR.mkdir(exist_ok=True)
 # signal. reddit_source.py remains in the codebase as a fallback path
 # but will return 0 candidates until OAuth is added.
 RSS_FEEDS = [
-    # ─── Funding-focused (higher base rate of real startups) ─────
-    "https://techcrunch.com/category/funding/feed/",
+        # ─── Funding-focused (higher base rate of real startups) ─────
+    "https://techcrunch.com/category/fundraising/feed/",
+    "https://techcrunch.com/tag/funding/feed/",
     "https://techcrunch.com/category/venture/feed/",
     "https://feeds.feedburner.com/venturebeat/SZYF",
 
