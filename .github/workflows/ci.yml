@@ -150,3 +150,73 @@ jobs:
 
           print("Voting parity OK:", len(py), "cases matched")
           PY
+
+  canonical-parity:
+    name: Canonical key parity (Python vs TypeScript)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install Python deps
+        run: pip install -r requirements.txt
+
+      - name: Install Node deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Python canonical fixture
+        run: python tests/test_canonical_parity.py > /tmp/py-canon.txt
+
+      - name: Run TS canonical fixture
+        run: npx tsx tests/canonical_parity.ts > /tmp/ts-canon.txt
+
+      - name: Compare keys
+        run: |
+          python - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+
+          def extract(path):
+              text = Path(path).read_text()
+              m = re.search(
+                  r"CANONICAL_PARITY_JSON_START\s*(.*?)\s*CANONICAL_PARITY_JSON_END",
+                  text,
+                  re.DOTALL,
+              )
+              if not m:
+                  raise SystemExit(f"No parity block found in {path}")
+              return json.loads(m.group(1))
+
+          py = extract("/tmp/py-canon.txt")
+          ts = extract("/tmp/ts-canon.txt")
+
+          if len(py) != len(ts):
+              print(f"MISMATCH: length {len(py)} vs {len(ts)}")
+              raise SystemExit(1)
+
+          for i, (p, t) in enumerate(zip(py, ts)):
+              if p.get("key") != t.get("key"):
+                  print(f"MISMATCH at case {i}:")
+                  print(f"  input:  {p.get('input')}")
+                  print(f"  python: {p.get('key')!r}")
+                  print(f"  ts:     {t.get('key')!r}")
+                  raise SystemExit(1)
+              if (p.get("error") is None) != (t.get("error") is None):
+                  print(f"ERROR-STATE MISMATCH at case {i}: {p} vs {t}")
+                  raise SystemExit(1)
+
+          print(f"Canonical key parity OK: {len(py)} cases matched")
+          PY
