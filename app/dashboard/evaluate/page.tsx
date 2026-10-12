@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/authz";
+import { PageFade } from "@/components/PageFade";
 
 export const dynamic = "force-dynamic";
 
@@ -22,14 +23,14 @@ export default async function EvaluateListPage() {
   });
 
   return (
-    <div>
+    <PageFade>
       <div className="mb-8 flex items-start justify-between">
         <div>
           <div className="eyebrow">Evaluate</div>
           <h1 className="text-3xl font-semibold">Your submissions</h1>
           <p className="text-[var(--color-text-mid)] text-sm mt-2">
-            Submit your own idea, answer the committee&apos;s questions, and get
-            a full evaluation.
+            Submit your own idea, answer the committee&apos;s questions, and
+            get a full evaluation.
           </p>
         </div>
         <Link href="/dashboard/evaluate/new" className="btn-primary">
@@ -44,12 +45,15 @@ export default async function EvaluateListPage() {
           <p className="text-[var(--color-text-mid)] text-sm mt-2 mb-4">
             Submit your first idea to run it through the committee.
           </p>
-          <Link href="/dashboard/evaluate/new" className="btn-primary inline-block">
+          <Link
+            href="/dashboard/evaluate/new"
+            className="btn-primary inline-block"
+          >
             Submit an idea
           </Link>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="stagger-list space-y-2">
           {evaluations.map((e) => {
             const statusLabel = STATUS_LABELS[e.status] ?? e.status;
             const isComplete = e.status === "complete";
@@ -70,7 +74,7 @@ export default async function EvaluateListPage() {
               <Link
                 key={e.id}
                 href={href}
-                className="panel block hover:border-[var(--color-teal)] transition-colors"
+                className="panel block transition-colors"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
@@ -101,6 +105,6 @@ export default async function EvaluateListPage() {
           })}
         </div>
       )}
-    </div>
+    </PageFade>
   );
 }
