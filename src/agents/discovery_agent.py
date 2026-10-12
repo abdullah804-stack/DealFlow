@@ -18,6 +18,7 @@ from src.memory.structured_memory import add_seen_candidate, is_already_seen
 from src.sources.hackernews_source import get_show_hn_posts
 from src.sources.reddit_source import get_reddit_posts
 from src.sources.rss_source import get_rss_candidates
+from src.sources.yc_source import get_yc_candidates
 
 from config.settings import DISCOVERY_BATCH_SIZE
 
@@ -223,6 +224,14 @@ Respond with JSON only."""
             logger.info(f"  RSS: {len(rss_posts)} entries")
         except Exception as e:
             logger.error(f"  RSS failed: {e}")
+
+	        # Y Combinator — recently funded startups
+        try:
+            yc_posts = get_yc_candidates(limit=30)
+            all_candidates.extend(yc_posts)
+            logger.info(f"  YC: {len(yc_posts)} companies")
+        except Exception as e:
+            logger.error(f"  YC failed: {e}")
         
         return all_candidates
     

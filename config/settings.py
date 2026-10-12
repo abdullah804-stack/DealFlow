@@ -21,6 +21,10 @@ DATA_DIR.mkdir(exist_ok=True)
 # ============================================================================
 # DISCOVERY SOURCES
 # ============================================================================
+
+# Reddit subreddits to monitor
+REDDIT_SUBREDDITS = ["startups", "SideProject", "Entrepreneur"]
+
 # RSS feeds to monitor.
 #
 # Priority ordering (highest signal first):
