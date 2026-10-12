@@ -3,7 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/authz";
 import { SkipSchema } from "@/lib/interview/schema";
 import { generateNextQuestion } from "@/lib/interview/turn-generator";
-import { evaluateProgress } from "@/lib/interview/state-machine";
+import {
+  evaluateProgress,
+  computeSpecialistProgress,
+} from "@/lib/interview/state-machine";
 import { QUESTIONS, QUESTIONS_BY_KEY } from "@/lib/interview/questions";
 
 const REQUIRED_KEYS = new Set(
@@ -105,7 +108,7 @@ export async function POST(
     );
   }
 
-  // Hard rule: required questions cannot be skipped
+  // Required questions cannot be skipped
   const question = QUESTIONS_BY_KEY[turn.questionKey];
   if (!question || question.required) {
     return NextResponse.json(
@@ -121,7 +124,8 @@ export async function POST(
     );
   }
 
-  // Mark as skipped
+  const previousSpecialist = turn.specialist;
+
   await prisma.interviewTurn.update({
     where: { id: turn.id },
     data: { skipped: true },
@@ -141,7 +145,14 @@ export async function POST(
     REQUIRED_KEYS
   );
 
-  // If required questions are all answered, transition to review
+  const specialistProgress = computeSpecialistProgress(
+    updatedTurns.map((t) => ({
+      specialist: t.specialist,
+      answerText: t.answerText,
+      skipped: t.skipped,
+    }))
+  );
+
   if (progress.isComplete) {
     await prisma.interviewSession.update({
       where: { id: session.id },
@@ -152,12 +163,15 @@ export async function POST(
       data: { status: "review" },
     });
     return NextResponse.json({
-      data: { skipped: true, complete: true, progress },
+      data: {
+        skipped: true,
+        complete: true,
+        progress: { ...progress, specialistProgress },
+      },
       requestId,
     });
   }
 
-  // Generate the next question
   const intake = {
     title: evaluation.title,
     oneLiner: evaluation.oneLiner,
@@ -184,7 +198,11 @@ export async function POST(
       data: { status: "review" },
     });
     return NextResponse.json({
-      data: { skipped: true, complete: true, progress },
+      data: {
+        skipped: true,
+        complete: true,
+        progress: { ...progress, specialistProgress },
+      },
       requestId,
     });
   }
@@ -219,8 +237,10 @@ export async function POST(
         questionKey: newTurn.questionKey,
         questionText: newTurn.questionText,
         isLastRequired: next.isLastRequired,
+        specialistChanged: newTurn.specialist !== previousSpecialist,
+        previousSpecialist,
       },
-      progress,
+      progress: { ...progress, specialistProgress },
     },
     requestId,
   });

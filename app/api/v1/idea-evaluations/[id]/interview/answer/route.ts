@@ -6,6 +6,7 @@ import { generateNextQuestion } from "@/lib/interview/turn-generator";
 import {
   evaluateProgress,
   validateAnswerLength,
+  computeSpecialistProgress,
   HARD_CAPS,
 } from "@/lib/interview/state-machine";
 import { QUESTIONS } from "@/lib/interview/questions";
@@ -57,7 +58,6 @@ export async function POST(
     );
   }
 
-  // Load evaluation + session + turns, verify ownership
   const evaluation = await prisma.ideaEvaluation.findFirst({
     where: { id, userId },
     include: {
@@ -126,22 +126,19 @@ export async function POST(
     );
   }
 
+  const previousSpecialist = turn.specialist;
+
   // Persist the answer
   await prisma.interviewTurn.update({
     where: { id: turn.id },
-    data: {
-      answerText,
-      answeredAt: new Date(),
-    },
+    data: { answerText, answeredAt: new Date() },
   });
 
-  // Reload turns
   const updatedTurns = await prisma.interviewTurn.findMany({
     where: { sessionId: session.id },
     orderBy: { turnIndex: "asc" },
   });
 
-  // Compute progress
   const progress = evaluateProgress(
     updatedTurns.map((t) => ({
       questionKey: t.questionKey,
@@ -149,6 +146,14 @@ export async function POST(
       skipped: t.skipped,
     })),
     REQUIRED_KEYS
+  );
+
+  const specialistProgress = computeSpecialistProgress(
+    updatedTurns.map((t) => ({
+      specialist: t.specialist,
+      answerText: t.answerText,
+      skipped: t.skipped,
+    }))
   );
 
   // Update session counters
@@ -161,7 +166,7 @@ export async function POST(
     },
   });
 
-  // If interview complete, transition to review
+  // If the entire interview is complete, transition to review
   if (progress.isComplete) {
     await prisma.interviewSession.update({
       where: { id: session.id },
@@ -176,13 +181,13 @@ export async function POST(
       data: {
         savedAnswer: true,
         complete: true,
-        progress,
+        progress: { ...progress, specialistProgress },
       },
       requestId,
     });
   }
 
-  // Generate next question
+  // Generate the next question
   const intake = {
     title: evaluation.title,
     oneLiner: evaluation.oneLiner,
@@ -204,18 +209,20 @@ export async function POST(
   );
 
   if (!next) {
-    // No more questions — should have hit isComplete above, but guard anyway
     await prisma.ideaEvaluation.update({
       where: { id: evaluation.id },
       data: { status: "review" },
     });
     return NextResponse.json({
-      data: { savedAnswer: true, complete: true, progress },
+      data: {
+        savedAnswer: true,
+        complete: true,
+        progress: { ...progress, specialistProgress },
+      },
       requestId,
     });
   }
 
-  // Persist the new turn (unanswered)
   const newTurn = await prisma.interviewTurn.create({
     data: {
       sessionId: session.id,
@@ -246,8 +253,10 @@ export async function POST(
         questionKey: newTurn.questionKey,
         questionText: newTurn.questionText,
         isLastRequired: next.isLastRequired,
+        specialistChanged: newTurn.specialist !== previousSpecialist,
+        previousSpecialist,
       },
-      progress,
+      progress: { ...progress, specialistProgress },
     },
     requestId,
   });

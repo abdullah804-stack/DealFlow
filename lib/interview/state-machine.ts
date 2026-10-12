@@ -174,3 +174,50 @@ export function canAskMoreForSpecialist(
   const counts = specialistQuestionCounts(turns);
   return (counts[specialist] ?? 0) < HARD_CAPS.maxQuestionsPerSpecialist;
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// SPECIALIST PROGRESS
+// ═══════════════════════════════════════════════════════════════════
+
+export type SpecialistProgressEntry = {
+  answered: number;
+  total: number;
+  complete: boolean;
+};
+
+export type SpecialistProgress = Record<string, SpecialistProgressEntry>;
+
+const SPECIALIST_ORDER = [
+  "technical",
+  "finance",
+  "marketing",
+  "legal",
+  "founder",
+] as const;
+
+export function computeSpecialistProgress(
+  turns: Array<{
+    specialist: string;
+    answerText: string | null;
+    skipped: boolean;
+  }>
+): SpecialistProgress {
+  const out: SpecialistProgress = {};
+
+  for (const s of SPECIALIST_ORDER) {
+    const forThis = turns.filter((t) => t.specialist === s);
+    const answered = forThis.filter(
+      (t) => t.answerText && t.answerText.trim().length > 0
+    ).length;
+    const total = forThis.length;
+    out[s] = {
+      answered,
+      total,
+      // Each specialist has 5 questions. Complete when all 5 are
+      // answered or skipped.
+      complete: total >= 5,
+    };
+  }
+
+  return out;
+}
