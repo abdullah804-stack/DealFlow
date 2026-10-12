@@ -1075,3 +1075,18 @@ input {
     transform: none !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   MOBILE LAYOUT HELPERS
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Hide scrollbar on horizontal nav strips */
+@media (max-width: 767px) {
+  nav.overflow-x-auto::-webkit-scrollbar {
+    display: none;
+  }
+  nav.overflow-x-auto {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+}

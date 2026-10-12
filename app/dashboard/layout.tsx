@@ -30,7 +30,6 @@ export default async function DashboardLayout({
             </span>
           </Link>
 
-          {/* Sign out on mobile — top-right */}
           <form
             action={async () => {
               "use server";
@@ -40,7 +39,7 @@ export default async function DashboardLayout({
           >
             <button
               type="submit"
-              className="text-xs font-mono text-[var(--color-text-low)] hover:text-[var(--color-neon-red)]"
+              className="text-xs font-mono text-[var(--color-text-low)] hover:text-[var(--color-neon-red)] transition-colors"
             >
               Sign out
             </button>
@@ -49,23 +48,23 @@ export default async function DashboardLayout({
 
         {/* Nav */}
         <nav className="flex md:flex-col gap-1 md:gap-1 overflow-x-auto md:overflow-x-visible mt-3 md:mt-0 flex-1 pb-1">
-          <Link href="/dashboard" className="nav-item">
+          <Link href="/dashboard" className="nav-item whitespace-nowrap">
             <span className="nav-ico">◈</span>
             <span>Dashboard</span>
           </Link>
-          <Link href="/dashboard/discover" className="nav-item">
+          <Link href="/dashboard/discover" className="nav-item whitespace-nowrap">
             <span className="nav-ico">▽</span>
             <span>Discover</span>
           </Link>
-          <Link href="/dashboard/reports" className="nav-item">
+          <Link href="/dashboard/reports" className="nav-item whitespace-nowrap">
             <span className="nav-ico">▤</span>
             <span>Reports</span>
           </Link>
-          <Link href="/dashboard/evaluate" className="nav-item">
+          <Link href="/dashboard/evaluate" className="nav-item whitespace-nowrap">
             <span className="nav-ico">◇</span>
             <span>Evaluate</span>
           </Link>
-          <Link href="/dashboard/settings" className="nav-item">
+          <Link href="/dashboard/settings" className="nav-item whitespace-nowrap">
             <span className="nav-ico">⚙</span>
             <span>Settings</span>
           </Link>

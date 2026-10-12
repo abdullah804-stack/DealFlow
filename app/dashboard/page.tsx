@@ -78,9 +78,9 @@ export default async function DashboardPage() {
 
   return (
     <PageFade>
-      <div className="mb-8">
+      <div className="mb-6 md:mb-8">
         <div className="eyebrow">Overview</div>
-        <h1 className="text-3xl font-semibold">Dashboard</h1>
+        <h1 className="text-2xl md:text-3xl font-semibold">Dashboard</h1>
         <p className="text-[var(--color-text-mid)] text-sm mt-2">
           Discovery and committee activity over the last 30 days.
         </p>
@@ -88,38 +88,40 @@ export default async function DashboardPage() {
 
       <TodaysPickCard report={todaysPick} />
 
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
         <div className="stat-card">
           <div className="stat-index">01</div>
-          <div className="stat-number text-[var(--color-blue)]">
+          <div className="stat-number text-[var(--color-blue)] text-2xl md:text-[34px]">
             <CountUp value={stats.discovered} />
           </div>
           <div className="stat-label">Discovered</div>
         </div>
         <div className="stat-card">
           <div className="stat-index">02</div>
-          <div className="stat-number text-[var(--color-amber)]">
+          <div className="stat-number text-[var(--color-amber)] text-2xl md:text-[34px]">
             <CountUp value={stats.validated} />
           </div>
           <div className="stat-label">Validated</div>
         </div>
         <div className="stat-card">
           <div className="stat-index">03</div>
-          <div className="stat-number text-[var(--color-neon-red)]">
+          <div className="stat-number text-[var(--color-neon-red)] text-2xl md:text-[34px]">
             <CountUp value={stats.escalated} />
           </div>
           <div className="stat-label">Escalated</div>
         </div>
         <div className="stat-card">
           <div className="stat-index">04</div>
-          <div className="stat-number text-[var(--color-neon)]">
+          <div className="stat-number text-[var(--color-neon)] text-2xl md:text-[34px]">
             <CountUp value={stats.invested} />
           </div>
           <div className="stat-label">Invested</div>
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      {/* Nav cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
         <Link
           href="/dashboard/discover"
           className="panel hover:border-[var(--color-neon)] transition-colors"
@@ -222,7 +224,7 @@ type TodaysPickReport = {
 function TodaysPickCard({ report }: { report: TodaysPickReport }) {
   if (!report) {
     return (
-      <div className="panel-lg mb-8">
+      <div className="panel-lg mb-6 md:mb-8">
         <div className="flex items-center justify-between mb-3">
           <div className="eyebrow mb-0">Today&apos;s pick</div>
           <span className="font-mono text-[10px] text-[var(--color-text-low)] uppercase tracking-wider">
@@ -266,10 +268,9 @@ function TodaysPickCard({ report }: { report: TodaysPickReport }) {
 
   return (
     <div
-      className="panel-lg mb-8 relative overflow-hidden"
+      className="panel-lg mb-6 md:mb-8 relative overflow-hidden"
       style={{ borderColor: "rgba(57, 255, 20, 0.25)" }}
     >
-      {/* Soft glow accent */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -280,8 +281,8 @@ function TodaysPickCard({ report }: { report: TodaysPickReport }) {
       />
 
       <div className="relative">
-        <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between mb-4 md:mb-5 flex-wrap gap-2">
+          <div className="flex items-center gap-2 md:gap-3">
             <div className="eyebrow mb-0">Today&apos;s pick</div>
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-neon)] pulse-glow" />
             <span className="font-mono text-[10px] text-[var(--color-text-low)] uppercase tracking-wider">
@@ -289,7 +290,7 @@ function TodaysPickCard({ report }: { report: TodaysPickReport }) {
             </span>
           </div>
 
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 md:gap-3 flex-wrap">
             {report.decision && (
               <span className={decisionClass}>{report.decision}</span>
             )}
@@ -301,29 +302,29 @@ function TodaysPickCard({ report }: { report: TodaysPickReport }) {
             )}
             {typeof report.weightedScore === "number" && (
               <span className="font-mono text-xs text-[var(--color-text-mid)]">
-                score {report.weightedScore.toFixed(2)}/10
+                {report.weightedScore.toFixed(2)}/10
               </span>
             )}
           </div>
         </div>
 
-        <h2 className="text-2xl md:text-3xl font-semibold mb-3">
+        <h2 className="text-xl md:text-3xl font-semibold mb-3">
           {report.company ?? "Unknown company"}
         </h2>
 
-        <p className="text-sm text-[var(--color-text-mid)] leading-relaxed mb-6 max-w-3xl">
+        <p className="text-sm text-[var(--color-text-mid)] leading-relaxed mb-5 md:mb-6 md:max-w-3xl">
           {summary}
         </p>
 
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-4 text-xs font-mono text-[var(--color-text-low)]">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center gap-3 md:gap-4 text-xs font-mono text-[var(--color-text-low)] flex-wrap">
             {report.candidate?.source && (
               <span>from {report.candidate.source}</span>
             )}
             {checkSize && (
               <>
                 <span>·</span>
-                <span>check size {checkSize}</span>
+                <span>check {checkSize}</span>
               </>
             )}
             {stage && (
@@ -334,18 +335,18 @@ function TodaysPickCard({ report }: { report: TodaysPickReport }) {
             )}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3 flex-wrap">
             <Link
               href={`/dashboard/reports/${report.id}`}
-              className="btn-ghost text-sm"
+              className="btn-ghost text-sm flex-1 md:flex-none text-center"
             >
-              Read full report →
+              Read report →
             </Link>
             <a
               href={`/api/v1/reports/${report.id}/pdf`}
-              className="btn-primary text-sm"
+              className="btn-primary text-sm flex-1 md:flex-none text-center"
             >
-              ↓ Download PDF
+              ↓ PDF
             </a>
           </div>
         </div>
