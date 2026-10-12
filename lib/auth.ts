@@ -17,7 +17,33 @@ const googleEnabled =
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-   session: { strategy: "jwt" },
+
+  // JWT strategy is required for the Credentials provider.
+  // maxAge: 30 days. updateAge: refresh the token at most once per day.
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
+    updateAge: 24 * 60 * 60, // refresh token once per day
+  },
+
+  // Force the session cookie to be persistent (with maxAge), not a
+  // session-only cookie that dies when the browser closes.
+  cookies: {
+    sessionToken: {
+      name:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-authjs.session-token"
+          : "authjs.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+      },
+    },
+  },
+
   pages: {
     signIn: "/login",
     error: "/login",
