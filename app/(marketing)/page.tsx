@@ -376,34 +376,33 @@ function StageCard({
 
 function AgentCard({ agent }: { agent: (typeof AGENTS)[number] }) {
   return (
-    <div className="panel h-full flex flex-col group hover:border-[var(--color-neon)] transition-all duration-300 overflow-hidden !p-0">
-      {/* Portrait frame — 2:3 aspect, no crop of head */}
-      <div className="relative w-full aspect-[3/4] overflow-hidden bg-[var(--color-bg-raise)]">
+    <div
+      className="agent-card group"
+      tabIndex={0}
+      aria-label={`${agent.name}, ${agent.title}`}
+    >
+      <div className="agent-card-glow" aria-hidden />
+      <div className="agent-card-scan" aria-hidden />
+
+      <div className="relative w-full aspect-[3/4] z-10">
         <Image
           src={agent.image}
           alt={agent.name}
           fill
           sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
-          className="object-cover object-top"
+          className="object-contain object-bottom agent-card-image"
           priority={false}
-        />
-        {/* Subtle bottom fade so text below blends */}
-        <div
-          className="absolute inset-x-0 bottom-0 h-16 pointer-events-none"
-          style={{
-            background:
-              "linear-gradient(to top, var(--color-panel), transparent)",
-          }}
         />
       </div>
 
-      {/* Info block */}
-      <div className="p-5 text-center flex flex-col items-center">
-        <div className="font-semibold text-[15px] mb-1">{agent.name}</div>
+      <div className="p-5 text-center flex flex-col items-center relative z-10">
+        <div className="font-semibold text-[15px] mb-1 transition-colors group-hover:text-[var(--color-neon)]">
+          {agent.name}
+        </div>
         <div className="font-mono text-[10px] text-[var(--color-text-low)] uppercase tracking-wider mb-3">
           {agent.title}
         </div>
-        <div className="font-mono text-xs text-[var(--color-neon)] mb-4">
+        <div className="font-mono text-xs text-[var(--color-neon)] mb-4 transition-all group-hover:drop-shadow-[0_0_8px_var(--color-neon-glow)]">
           {agent.weight}
         </div>
         <p className="text-xs text-[var(--color-text-mid)] leading-relaxed">
@@ -413,6 +412,7 @@ function AgentCard({ agent }: { agent: (typeof AGENTS)[number] }) {
     </div>
   );
 }
+
 function SiteFooter() {
   return (
     <footer className="px-8 py-10 border-t border-[var(--color-border-soft)]">
