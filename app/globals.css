@@ -1,32 +1,50 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════════
-   DESIGN TOKENS — ported from frontend/style.css
-   Tailwind v4 @theme block. Every var(--x) becomes a utility class.
+   DESIGN TOKENS — Batch 1 theme
+   Near-black bg + neon green primary + neon red danger
    ═══════════════════════════════════════════════════════════════════ */
 
 @theme {
-  --color-bg: #090b10;
-  --color-bg-raise: #0d1017;
-  --color-panel: #12151d;
-  --color-panel-alt: #171b25;
-  --color-border: #232733;
-  --color-border-soft: #1a1e28;
+  /* Surfaces — pure black family */
+  --color-bg: #050505;
+  --color-bg-raise: #0a0a0a;
+  --color-panel: #0e0e0e;
+  --color-panel-alt: #131313;
+  --color-border: #1e1e1e;
+  --color-border-soft: #161616;
 
-  --color-text-hi: #eef1f6;
+  /* Text */
+  --color-text-hi: #f4f5f7;
   --color-text-mid: #9aa3b5;
-  --color-text-low: #5c6577;
+  --color-text-low: #565d6d;
 
-  --color-teal: #3fe0c2;
-  --color-violet: #9b8cf9;
-  --color-amber: #f0ad5c;
-  --color-coral: #f1667c;
-  --color-blue: #5b9cf6;
+  /* Neon primary — replaces teal */
+  --color-neon: #39ff14;
+  --color-neon-dim: rgba(57, 255, 20, 0.12);
+  --color-neon-glow: rgba(57, 255, 20, 0.45);
 
+  /* Neon danger — replaces coral */
+  --color-neon-red: #ff2d55;
+  --color-neon-red-dim: rgba(255, 45, 85, 0.12);
+  --color-neon-red-glow: rgba(255, 45, 85, 0.5);
+
+  /* Secondary accents (boosted saturation) */
+  --color-violet: #b47aff;
+  --color-amber: #ffb84d;
+  --color-blue: #4db8ff;
+
+  /* Backwards-compat aliases — old classes using --color-teal
+     and --color-coral still resolve */
+  --color-teal: #39ff14;
+  --color-coral: #ff2d55;
+
+  /* Fonts */
   --font-display: "Space Grotesk", sans-serif;
   --font-body: "Inter", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 
+  /* Radii */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
@@ -46,6 +64,11 @@ body {
   color: var(--color-text-hi);
   min-height: 100vh;
   position: relative;
+  /* Subtle radial glow behind everything */
+  background-image:
+    radial-gradient(circle at 15% 0%, rgba(57, 255, 20, 0.04), transparent 40%),
+    radial-gradient(circle at 85% 100%, rgba(255, 45, 85, 0.03), transparent 40%);
+  background-attachment: fixed;
 }
 
 body::before {
@@ -53,16 +76,16 @@ body::before {
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+    linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
   background-size: 42px 42px;
   pointer-events: none;
   z-index: 0;
 }
 
 ::selection {
-  background: var(--color-teal);
-  color: #061410;
+  background: var(--color-neon);
+  color: #020502;
 }
 
 button,
@@ -73,7 +96,7 @@ input {
 }
 
 *:focus-visible {
-  outline: 1.5px solid var(--color-teal);
+  outline: 1.5px solid var(--color-neon);
   outline-offset: 2px;
 }
 
@@ -86,23 +109,31 @@ input {
   font-size: 11px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--color-teal);
+  color: var(--color-neon);
   margin-bottom: 8px;
 }
 
 .btn-primary {
   padding: 10px 20px;
-  background: var(--color-teal);
-  color: #06110d;
+  background: var(--color-neon);
+  color: #020502;
   border: none;
   border-radius: var(--radius-sm);
   font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
-  transition: filter 0.15s;
+  transition: box-shadow 0.2s, filter 0.15s;
+  box-shadow: 0 0 0 rgba(57, 255, 20, 0);
 }
-.btn-primary:hover { filter: brightness(1.1); }
-.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 0 20px var(--color-neon-glow);
+}
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
 
 .btn-ghost {
   padding: 8px 16px;
@@ -115,8 +146,9 @@ input {
   transition: all 0.15s;
 }
 .btn-ghost:hover {
-  border-color: var(--color-coral);
-  color: var(--color-coral);
+  border-color: var(--color-neon-red);
+  color: var(--color-neon-red);
+  box-shadow: 0 0 12px var(--color-neon-red-dim);
 }
 
 .input {
@@ -128,10 +160,15 @@ input {
   color: var(--color-text-hi);
   font-size: 13.5px;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
-.input:focus { border-color: var(--color-teal); }
-.input::placeholder { color: var(--color-text-low); }
+.input:focus {
+  border-color: var(--color-neon);
+  box-shadow: 0 0 0 3px var(--color-neon-dim);
+}
+.input::placeholder {
+  color: var(--color-text-low);
+}
 
 .field-label {
   display: block;
@@ -148,6 +185,10 @@ input {
   border: 1px solid var(--color-border-soft);
   border-radius: var(--radius-md);
   padding: 20px;
+  transition: border-color 0.2s;
+}
+.panel:hover {
+  border-color: var(--color-border);
 }
 
 .panel-lg {
@@ -162,11 +203,12 @@ input {
   border: 1px solid var(--color-border-soft);
   border-radius: var(--radius-md);
   padding: 20px 20px 18px;
-  transition: border-color 0.2s, transform 0.2s;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 .stat-card:hover {
   transform: translateY(-2px);
   border-color: var(--color-border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 .stat-index {
   font-family: var(--font-mono);
@@ -194,9 +236,10 @@ input {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.5px;
-  background: rgba(63, 224, 194, 0.12);
-  color: var(--color-teal);
-  border: 1px solid rgba(63, 224, 194, 0.3);
+  background: var(--color-neon-dim);
+  color: var(--color-neon);
+  border: 1px solid rgba(57, 255, 20, 0.35);
+  box-shadow: 0 0 10px var(--color-neon-dim);
 }
 .badge-pass {
   padding: 3px 12px;
@@ -205,42 +248,10 @@ input {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.5px;
-  background: rgba(241, 102, 124, 0.12);
-  color: var(--color-coral);
-  border: 1px solid rgba(241, 102, 124, 0.3);
-}
-
-.loading-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--color-text-low);
-  font-family: var(--font-mono);
-  font-size: 13px;
-}
-.loading-state::before {
-  content: "";
-  display: block;
-  width: 20px;
-  height: 20px;
-  margin: 0 auto 14px;
-  border: 2px solid var(--color-border);
-  border-top-color: var(--color-teal);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.empty-state {
-  text-align: center;
-  padding: 50px 24px;
-  background: var(--color-panel);
-  border: 1px dashed var(--color-border);
-  border-radius: var(--radius-md);
-}
-.empty-icon {
-  font-size: 30px;
-  margin-bottom: 12px;
-  color: var(--color-text-low);
+  background: var(--color-neon-red-dim);
+  color: var(--color-neon-red);
+  border: 1px solid rgba(255, 45, 85, 0.35);
+  box-shadow: 0 0 10px var(--color-neon-red-dim);
 }
 
 .nav-item {
@@ -264,10 +275,167 @@ input {
   font-size: 13px;
   width: 16px;
   text-align: center;
+  transition: color 0.15s;
 }
 .nav-item:hover .nav-ico {
-  color: var(--color-teal);
+  color: var(--color-neon);
 }
+
+.loading-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--color-text-low);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+.loading-state::before {
+  content: "";
+  display: block;
+  width: 20px;
+  height: 20px;
+  margin: 0 auto 14px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-neon);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 50px 24px;
+  background: var(--color-panel);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+}
+.empty-icon {
+  font-size: 30px;
+  margin-bottom: 12px;
+  color: var(--color-text-low);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   GRADIENT UTILITIES
+   ═══════════════════════════════════════════════════════════════════ */
+
+.gradient-neon {
+  background: linear-gradient(135deg, var(--color-neon) 0%, #6effa0 100%);
+}
+
+.gradient-danger {
+  background: linear-gradient(135deg, var(--color-neon-red) 0%, #ff6b8a 100%);
+}
+
+.gradient-panel {
+  background: linear-gradient(
+    155deg,
+    var(--color-panel) 0%,
+    var(--color-bg-raise) 100%
+  );
+}
+
+.gradient-radial-neon {
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(57, 255, 20, 0.15),
+    transparent 60%
+  );
+}
+
+.gradient-text-neon {
+  background: linear-gradient(135deg, #39ff14 0%, #6effa0 60%, #39ff14 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ANIMATION UTILITIES
+   ═══════════════════════════════════════════════════════════════════ */
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 var(--color-neon-glow); }
+  50% { box-shadow: 0 0 20px var(--color-neon-glow); }
+}
+.glow-pulse {
+  animation: glow-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up {
+  animation: fade-up 0.5s ease-out both;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.fade-in {
+  animation: fade-in 0.4s ease-out both;
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.slide-in-left {
+  animation: slide-in-left 0.4s ease-out both;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-panel) 0%,
+    var(--color-panel-alt) 50%,
+    var(--color-panel) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s linear infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Delay helpers */
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-500 { animation-delay: 0.5s; }
+.delay-700 { animation-delay: 0.7s; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   SCROLL-TRIGGERED FADE
+   Add `data-animate` to any element with the .reveal class
+   ═══════════════════════════════════════════════════════════════════ */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   REDUCED MOTION
+   ═══════════════════════════════════════════════════════════════════ */
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -275,4 +443,5 @@ input {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+  .reveal { opacity: 1; transform: none; }
 }
