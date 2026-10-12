@@ -2,47 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import {
+  SPECIALIST_ORDER,
+  SPECIALIST_META,
+  type SpecialistKey,
+} from "@/lib/interview/specialists";
 
-export const SPECIALIST_ORDER = [
-  "technical",
-  "finance",
-  "marketing",
-  "legal",
-  "founder",
-] as const;
-
-export type SpecialistKey = (typeof SPECIALIST_ORDER)[number];
-
-export const SPECIALIST_META: Record<
-  SpecialistKey,
-  { name: string; title: string; image: string }
-> = {
-  technical: {
-    name: "Aris Bahri",
-    title: "Technical Agent",
-    image: "/agents/technical.png",
-  },
-  finance: {
-    name: "Amara Okafor",
-    title: "Finance Agent",
-    image: "/agents/finance.png",
-  },
-  marketing: {
-    name: "Rohan Mehta",
-    title: "Marketing Agent",
-    image: "/agents/marketing.png",
-  },
-  legal: {
-    name: "Mei Tanaka",
-    title: "Legal Agent",
-    image: "/agents/legal.png",
-  },
-  founder: {
-    name: "Karim Haddad",
-    title: "Founder Agent",
-    image: "/agents/founder.png",
-  },
-};
+// Re-export for convenience
+export { SPECIALIST_ORDER, SPECIALIST_META };
+export type { SpecialistKey };
 
 export type SpecialistProgressEntry = {
   answered: number;
@@ -174,7 +142,8 @@ export function QuestionCard({
     <div className="panel-lg fade-in" key={questionText}>
       <div className="flex items-center justify-between mb-5">
         <div className="eyebrow mb-0">
-          {meta.title.replace(" Agent", "")} question {questionIndex} of {totalQuestions}
+          {meta.title.replace(" Agent", "")} question {questionIndex} of{" "}
+          {totalQuestions}
         </div>
       </div>
       <p className="text-[var(--color-text-hi)] text-lg md:text-xl leading-relaxed">

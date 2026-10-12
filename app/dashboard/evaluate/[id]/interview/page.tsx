@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/authz";
-import { SPECIALIST_ORDER } from "@/components/interview/InterviewUI";
+import { SPECIALIST_ORDER } from "@/lib/interview/specialists";
 
 export const dynamic = "force-dynamic";
 
