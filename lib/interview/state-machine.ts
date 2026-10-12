@@ -101,8 +101,14 @@ export function evaluateProgress(
     answeredKeys.has(k)
   ).length;
 
-  const isComplete = requiredAnswered === requiredKeys.size;
-
+  // An interview is only complete when:
+  // 1. All required questions have been answered (not skipped), AND
+  // 2. All 25 questions have been asked across the 5 specialists
+  //    (i.e., we haven't stopped mid-specialist).
+  const DISTINCT_KEYS_ASKED = new Set(turns.map((t) => t.questionKey));
+  const allQuestionsAsked = DISTINCT_KEYS_ASKED.size >= 25;
+  const isComplete =
+    requiredAnswered === requiredKeys.size && allQuestionsAsked;
   return {
     total: TOTAL_QUESTIONS,
     answered,

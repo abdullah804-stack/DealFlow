@@ -56,11 +56,11 @@ export default function SpecialistInterviewPage() {
   }, [rawSpecialist]);
 
   const [data, setData] = useState<EvaluationData | null>(null);
-  const [progress, setProgress] = useState<SpecialistProgress>(FALLBACK_PROGRESS);
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [refetchedOnce, setRefetchedOnce] = useState(false);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/v1/idea-evaluations/${evaluationId}`);
@@ -73,7 +73,6 @@ export default function SpecialistInterviewPage() {
     setData(body.data);
     setLoading(false);
 
-    // If the evaluation moved past interviewing, route accordingly
     if (body.data.evaluation.status === "review") {
       router.push(`/dashboard/evaluate/${evaluationId}/review`);
     }
@@ -87,14 +86,17 @@ export default function SpecialistInterviewPage() {
     load();
   }, [specialist, evaluationId, load, router]);
 
-  // Derived data for this specialist
+  // Turns for the current specialist
   const thisSpecialistTurns = useMemo(() => {
     if (!data?.session || !specialist) return [];
     return data.session.turns.filter((t) => t.specialist === specialist);
   }, [data, specialist]);
 
   const pendingTurn = useMemo(
-    () => [...thisSpecialistTurns].reverse().find((t) => !t.answerText && !t.skipped),
+    () =>
+      [...thisSpecialistTurns]
+        .reverse()
+        .find((t) => !t.answerText && !t.skipped),
     [thisSpecialistTurns]
   );
 
@@ -104,35 +106,60 @@ export default function SpecialistInterviewPage() {
 
   const questionIndex = Math.min(answeredCount + 1, 5);
 
-  // Redirect to the next specialist when this one is exhausted
-    // If we land on a specialist with no turns and the interview isn't
-  // finished, the client likely has stale data. Refetch once.
-  const [refetchedOnce, setRefetchedOnce] = useState(false);
+  // Derived progress — always reflects the actual turns on the client.
+  const derivedProgress: SpecialistProgress = useMemo(() => {
+    const allTurns = data?.session?.turns ?? [];
+    const result: SpecialistProgress = { ...FALLBACK_PROGRESS };
+    for (const s of SPECIALIST_ORDER) {
+      const forThis = allTurns.filter((t) => t.specialist === s);
+      const answered = forThis.filter(
+        (t) => t.answerText && t.answerText.trim().length > 0
+      ).length;
+      result[s] = {
+        answered,
+        total: forThis.length,
+        complete:
+          forThis.length >= 5 &&
+          forThis.every((t) => t.answerText || t.skipped),
+      };
+    }
+    return result;
+  }, [data]);
+
+  // Self-heal: if we have no turns for this specialist but the interview
+  // isn't over, the client probably has stale data. Refetch once.
   useEffect(() => {
     if (!data || !specialist || loading) return;
     if (thisSpecialistTurns.length === 0 && !refetchedOnce) {
       setRefetchedOnce(true);
       load();
     }
-  }, [data, specialist, thisSpecialistTurns, loading, load, refetchedOnce]);
+  }, [
+    data,
+    specialist,
+    thisSpecialistTurns.length,
+    loading,
+    refetchedOnce,
+    load,
+  ]);
 
   // Redirect to the next specialist when this one is exhausted
   useEffect(() => {
     if (!data || !specialist || loading) return;
-    // Skip if we haven't gotten a turn yet (may be refetching)
     if (thisSpecialistTurns.length === 0) return;
 
-    const allDone = thisSpecialistTurns.every(
-      (t) => t.answerText || t.skipped
-    );
+      const allDone =
+      thisSpecialistTurns.length >= 5 &&
+      thisSpecialistTurns.every((t) => t.answerText || t.skipped);
     if (!allDone) return;
-    // ...
 
-    // Find the next specialist that still has work
     const idx = SPECIALIST_ORDER.indexOf(specialist);
     const next = SPECIALIST_ORDER.slice(idx + 1).find((key) => {
-      const forThis = data.session?.turns.filter((t) => t.specialist === key) ?? [];
-      const done = forThis.length >= 5 && forThis.every((t) => t.answerText || t.skipped);
+      const forThis =
+        data.session?.turns.filter((t) => t.specialist === key) ?? [];
+      const done =
+        forThis.length >= 5 &&
+        forThis.every((t) => t.answerText || t.skipped);
       return !done;
     });
 
@@ -143,7 +170,7 @@ export default function SpecialistInterviewPage() {
     }
   }, [data, specialist, thisSpecialistTurns, loading, router, evaluationId]);
 
-      async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!pendingTurn || !answer.trim() || submitting) return;
 
@@ -153,8 +180,7 @@ export default function SpecialistInterviewPage() {
     setSubmitting(true);
     setError("");
 
-    // Optimistically mark this turn as answered so the submit button
-    // disappears immediately and double-clicks are impossible.
+    // Optimistic — hide the form immediately so a second click can't fire.
     setData((prev) => {
       if (!prev?.session) return prev;
       return {
@@ -189,16 +215,12 @@ export default function SpecialistInterviewPage() {
       }
 
       setError(body?.error?.message ?? "Failed to submit answer.");
-      await load(); // restore correct state from server
+      await load();
       setSubmitting(false);
       return;
     }
 
     const body = await res.json();
-
-    if (body.data?.progress?.specialistProgress) {
-      setProgress(body.data.progress.specialistProgress);
-    }
 
     if (body.data?.complete) {
       router.push(`/dashboard/evaluate/${evaluationId}/review`);
@@ -212,6 +234,8 @@ export default function SpecialistInterviewPage() {
   async function handleSkip() {
     if (!pendingTurn || submitting) return;
 
+    const turnIndex = pendingTurn.turnIndex;
+
     setSubmitting(true);
     setError("");
 
@@ -220,7 +244,7 @@ export default function SpecialistInterviewPage() {
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ turnIndex: pendingTurn.turnIndex }),
+        body: JSON.stringify({ turnIndex }),
       }
     );
 
@@ -240,10 +264,6 @@ export default function SpecialistInterviewPage() {
     }
 
     const body = await res.json();
-
-    if (body.data?.progress?.specialistProgress) {
-      setProgress(body.data.progress.specialistProgress);
-    }
 
     if (body.data?.complete) {
       router.push(`/dashboard/evaluate/${evaluationId}/review`);
@@ -280,7 +300,6 @@ export default function SpecialistInterviewPage() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      {/* Save & exit */}
       <div className="mb-6">
         <Link
           href="/dashboard/evaluate"
@@ -290,7 +309,6 @@ export default function SpecialistInterviewPage() {
         </Link>
       </div>
 
-      {/* Header */}
       <div className="mb-8">
         <div className="eyebrow">Interview</div>
         <h1 className="text-2xl md:text-3xl font-semibold mb-1">
@@ -301,14 +319,12 @@ export default function SpecialistInterviewPage() {
         </p>
       </div>
 
-      {/* Progress strip */}
       <ProgressStrip
         evaluationId={evaluationId}
         currentSpecialist={specialist}
-        progress={progress}
+        progress={derivedProgress}
       />
 
-      {/* Two-column layout: agent left, question right */}
       <div className="grid md:grid-cols-[280px_1fr] gap-6">
         <div className="hidden md:block">
           <AgentSidebar
@@ -373,7 +389,7 @@ export default function SpecialistInterviewPage() {
                   </div>
                 </div>
                 {error && (
-                  <p className="text-[var(--color-coral)] text-sm mt-3">
+                  <p className="text-[var(--color-neon-red)] text-sm mt-3">
                     {error}
                   </p>
                 )}
