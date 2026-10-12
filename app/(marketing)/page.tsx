@@ -1,8 +1,59 @@
 import Link from "next/link";
+import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { Reveal } from "@/components/Reveal";
+import { Logo } from "@/components/Logo";
 
 export const dynamic = "force-dynamic";
+
+// ─── Agent roster ──────────────────────────────────────────────
+const AGENTS = [
+  {
+    key: "technical",
+    name: "Aris Bahri",
+    title: "Technical Agent",
+    weight: "25%",
+    image: "/agents/technical.png",
+    description:
+      "Former infrastructure lead. Evaluates architecture, scalability, and whether the technical moat holds up under competitive pressure.",
+  },
+  {
+    key: "finance",
+    name: "Amara Okafor",
+    title: "Finance Agent",
+    weight: "25%",
+    image: "/agents/finance.png",
+    description:
+      "Ex-growth equity analyst. Tests unit economics, TAM sizing, and the path from current revenue to a real business.",
+  },
+  {
+    key: "marketing",
+    name: "Rohan Mehta",
+    title: "Marketing Agent",
+    weight: "20%",
+    image: "/agents/marketing.png",
+    description:
+      "Operating CMO background. Asks whether anyone actually wants this, and how the company reaches them without burning cash.",
+  },
+  {
+    key: "legal",
+    name: "Mei Tanaka",
+    title: "Legal Agent",
+    weight: "10%",
+    image: "/agents/legal.png",
+    description:
+      "Regulatory and IP counsel. Surfaces compliance exposure, data handling obligations, and structural risk before it becomes a problem.",
+  },
+  {
+    key: "founder",
+    name: "Karim Haddad",
+    title: "Founder Agent",
+    weight: "20%",
+    image: "/agents/founder.png",
+    description:
+      "Two prior exits. Judges execution speed, team composition, and whether the founders can ship what they've promised.",
+  },
+];
 
 async function getLiveStats() {
   try {
@@ -26,7 +77,6 @@ export default async function LandingPage() {
 
       {/* ─── Hero ─────────────────────────────────────────────── */}
       <section className="relative px-8 py-24 md:py-32 overflow-hidden">
-        {/* Radial glow behind hero */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -50,8 +100,8 @@ export default async function LandingPage() {
           <Reveal delay={200}>
             <p className="text-[var(--color-text-mid)] text-lg md:text-xl leading-relaxed max-w-2xl mx-auto text-center mb-10">
               DealFlow discovers new startups every day, filters them through
-              a validation layer, and runs the strongest candidates through
-              a five-agent investment committee that debates and votes —
+              a validation layer, and runs the strongest candidates through a
+              five-agent investment committee that debates and votes —
               autonomously, at 06:00 UTC.
             </p>
           </Reveal>
@@ -66,7 +116,6 @@ export default async function LandingPage() {
             </div>
           </Reveal>
 
-          {/* Live stats strip */}
           <Reveal delay={500}>
             <div className="mt-16 grid grid-cols-3 gap-6 max-w-2xl mx-auto">
               <StatBlock value={stats.candidates} label="Candidates discovered" />
@@ -120,7 +169,7 @@ export default async function LandingPage() {
 
       {/* ─── Committee ────────────────────────────────────────── */}
       <section className="px-8 py-20 border-t border-[var(--color-border-soft)]">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <Reveal>
             <div className="text-center mb-16">
               <div className="eyebrow mb-4">The committee</div>
@@ -134,27 +183,10 @@ export default async function LandingPage() {
             </div>
           </Reveal>
 
-          <div className="grid md:grid-cols-5 gap-4">
-            {[
-              { name: "Technical", weight: "25%", focus: "Moat & feasibility", glyph: "◆" },
-              { name: "Finance", weight: "25%", focus: "Unit economics", glyph: "◈" },
-              { name: "Marketing", weight: "20%", focus: "Demand & positioning", glyph: "▽" },
-              { name: "Legal", weight: "10%", focus: "Regulation & IP", glyph: "▲" },
-              { name: "Founder", weight: "20%", focus: "Execution", glyph: "◇" },
-            ].map((agent, i) => (
-              <Reveal key={agent.name} delay={i * 80}>
-                <div className="panel text-center h-full">
-                  <div className="text-[var(--color-neon)] text-2xl mb-3">
-                    {agent.glyph}
-                  </div>
-                  <div className="font-semibold mb-1">{agent.name}</div>
-                  <div className="font-mono text-xs text-[var(--color-neon)] mb-3">
-                    {agent.weight}
-                  </div>
-                  <div className="text-xs text-[var(--color-text-mid)] leading-relaxed">
-                    {agent.focus}
-                  </div>
-                </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
+            {AGENTS.map((agent, i) => (
+              <Reveal key={agent.key} delay={i * 80}>
+                <AgentCard agent={agent} />
               </Reveal>
             ))}
           </div>
@@ -190,7 +222,10 @@ export default async function LandingPage() {
                   <Link href="/sample" className="btn-ghost text-sm">
                     View sample
                   </Link>
-                  <Link href="/signup" className="text-[var(--color-neon)] text-sm hover:underline">
+                  <Link
+                    href="/signup"
+                    className="text-[var(--color-neon)] text-sm hover:underline"
+                  >
                     Sign up →
                   </Link>
                 </div>
@@ -212,7 +247,10 @@ export default async function LandingPage() {
                   <Link href="/signup" className="btn-primary text-sm">
                     Submit an idea
                   </Link>
-                  <Link href="/methodology" className="text-[var(--color-text-mid)] text-sm hover:text-[var(--color-neon)]">
+                  <Link
+                    href="/methodology"
+                    className="text-[var(--color-text-mid)] text-sm hover:text-[var(--color-neon)]"
+                  >
                     Read rubric →
                   </Link>
                 </div>
@@ -268,20 +306,7 @@ export default async function LandingPage() {
 function SiteNav() {
   return (
     <nav className="flex items-center justify-between px-8 py-6 border-b border-[var(--color-border-soft)]">
-      <div className="flex items-center gap-3">
-        <span
-          className="text-[var(--color-neon)] text-xl"
-          style={{ filter: "drop-shadow(0 0 6px var(--color-neon-glow))" }}
-        >
-          ⬡
-        </span>
-        <div className="flex flex-col leading-tight">
-          <span className="font-bold text-[15px]">DealFlow</span>
-          <span className="font-mono text-[10px] text-[var(--color-text-low)] uppercase tracking-wider">
-            deal intelligence
-          </span>
-        </div>
-      </div>
+      <Logo />
       <div className="flex items-center gap-3">
         <Link
           href="/methodology"
@@ -349,12 +374,57 @@ function StageCard({
   );
 }
 
+function AgentCard({ agent }: { agent: (typeof AGENTS)[number] }) {
+  return (
+    <div className="panel h-full flex flex-col group hover:border-[var(--color-neon)] transition-all duration-300 overflow-hidden !p-0">
+      {/* Portrait frame — 2:3 aspect, no crop of head */}
+      <div className="relative w-full aspect-[3/4] overflow-hidden bg-[var(--color-bg-raise)]">
+        <Image
+          src={agent.image}
+          alt={agent.name}
+          fill
+          sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
+          className="object-cover object-top"
+          priority={false}
+        />
+        {/* Subtle bottom fade so text below blends */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-16 pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(to top, var(--color-panel), transparent)",
+          }}
+        />
+      </div>
+
+      {/* Info block */}
+      <div className="p-5 text-center flex flex-col items-center">
+        <div className="font-semibold text-[15px] mb-1">{agent.name}</div>
+        <div className="font-mono text-[10px] text-[var(--color-text-low)] uppercase tracking-wider mb-3">
+          {agent.title}
+        </div>
+        <div className="font-mono text-xs text-[var(--color-neon)] mb-4">
+          {agent.weight}
+        </div>
+        <p className="text-xs text-[var(--color-text-mid)] leading-relaxed">
+          {agent.description}
+        </p>
+      </div>
+    </div>
+  );
+}
 function SiteFooter() {
   return (
     <footer className="px-8 py-10 border-t border-[var(--color-border-soft)]">
       <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <span className="text-[var(--color-neon)]">⬡</span>
+          <Image
+            src="/logo.png"
+            alt="DealFlow"
+            width={24}
+            height={24}
+            className="rounded"
+          />
           <span className="text-sm text-[var(--color-text-low)]">
             DealFlow — autonomous VC analyst
           </span>
