@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { PageFade } from "@/components/PageFade";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ export default async function ReportsPage() {
   });
 
   return (
-    <div>
+    <PageFade>
       <div className="mb-8">
         <div className="eyebrow">Archive</div>
         <h1 className="text-3xl font-semibold">Reports</h1>
@@ -29,10 +30,11 @@ export default async function ReportsPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="stagger-list space-y-3">
           {reports.map((r) => {
             const json = (r.reportJson ?? {}) as Record<string, unknown>;
-            const starRating = r.starRating ?? (json.star_rating as number | undefined);
+            const starRating =
+              r.starRating ?? (json.star_rating as number | undefined);
             const summary =
               (json.executive_summary as string | undefined) ??
               (json.startup_overview as string | undefined) ??
@@ -42,7 +44,7 @@ export default async function ReportsPage() {
               <Link
                 key={r.id}
                 href={`/dashboard/reports/${r.id}`}
-                className="panel block hover:border-[var(--color-teal)] transition-colors"
+                className="panel block transition-colors"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
@@ -84,6 +86,6 @@ export default async function ReportsPage() {
           })}
         </div>
       )}
-    </div>
+    </PageFade>
   );
 }

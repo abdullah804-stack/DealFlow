@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { PageFade } from "@/components/PageFade";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,7 @@ export default async function DiscoverPage() {
   });
 
   return (
-    <div>
+    <PageFade>
       <div className="mb-8">
         <div className="eyebrow">Pipeline</div>
         <h1 className="text-3xl font-semibold">Discover</h1>
@@ -40,7 +41,7 @@ export default async function DiscoverPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="stagger-list space-y-2">
           {candidates.map((c) => {
             const dossier = c.dossiers[0];
             const decision = dossier?.decisions[0];
@@ -48,7 +49,7 @@ export default async function DiscoverPage() {
               <Link
                 key={c.id}
                 href={`/dashboard/discover/${c.id}`}
-                className="panel block hover:border-[var(--color-teal)] transition-colors"
+                className="panel block hover:border-[var(--color-neon)] transition-colors"
               >
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
@@ -56,7 +57,9 @@ export default async function DiscoverPage() {
                     <div className="flex items-center gap-3 mt-1 text-xs text-[var(--color-text-low)] font-mono">
                       <span>{c.source}</span>
                       {c.discoveryConfidence !== null && (
-                        <span>confidence: {c.discoveryConfidence.toFixed(1)}</span>
+                        <span>
+                          confidence: {c.discoveryConfidence.toFixed(1)}
+                        </span>
                       )}
                       <span>{c.firstSeen.toISOString().slice(0, 10)}</span>
                     </div>
@@ -81,6 +84,6 @@ export default async function DiscoverPage() {
           })}
         </div>
       )}
-    </div>
+    </PageFade>
   );
 }

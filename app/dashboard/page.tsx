@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { subDays } from "date-fns";
+import { CountUp } from "@/components/CountUp";
+import { PageFade } from "@/components/PageFade";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +49,7 @@ export default async function DashboardPage() {
   const stats = await getFunnelStats(30);
 
   return (
-    <div>
+    <PageFade>
       <div className="mb-8">
         <div className="eyebrow">Overview</div>
         <h1 className="text-3xl font-semibold">Dashboard</h1>
@@ -60,28 +62,28 @@ export default async function DashboardPage() {
         <div className="stat-card">
           <div className="stat-index">01</div>
           <div className="stat-number text-[var(--color-blue)]">
-            {stats.discovered}
+            <CountUp value={stats.discovered} />
           </div>
           <div className="stat-label">Discovered</div>
         </div>
         <div className="stat-card">
           <div className="stat-index">02</div>
           <div className="stat-number text-[var(--color-amber)]">
-            {stats.validated}
+            <CountUp value={stats.validated} />
           </div>
           <div className="stat-label">Validated</div>
         </div>
         <div className="stat-card">
           <div className="stat-index">03</div>
-          <div className="stat-number text-[var(--color-coral)]">
-            {stats.escalated}
+          <div className="stat-number text-[var(--color-neon-red)]">
+            <CountUp value={stats.escalated} />
           </div>
           <div className="stat-label">Escalated</div>
         </div>
         <div className="stat-card">
           <div className="stat-index">04</div>
-          <div className="stat-number text-[var(--color-teal)]">
-            {stats.invested}
+          <div className="stat-number text-[var(--color-neon)]">
+            <CountUp value={stats.invested} />
           </div>
           <div className="stat-label">Invested</div>
         </div>
@@ -90,9 +92,9 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-4 gap-4 mb-8">
         <Link
           href="/dashboard/discover"
-          className="panel hover:border-[var(--color-teal)] transition-colors"
+          className="panel hover:border-[var(--color-neon)] transition-colors"
         >
-          <div className="text-[var(--color-teal)] text-lg mb-3">▽</div>
+          <div className="text-[var(--color-neon)] text-lg mb-3">▽</div>
           <h3 className="font-semibold mb-1">Discover</h3>
           <p className="text-xs text-[var(--color-text-mid)]">
             Browse all candidates from the daily pipeline
@@ -100,9 +102,9 @@ export default async function DashboardPage() {
         </Link>
         <Link
           href="/dashboard/reports"
-          className="panel hover:border-[var(--color-teal)] transition-colors"
+          className="panel hover:border-[var(--color-neon)] transition-colors"
         >
-          <div className="text-[var(--color-teal)] text-lg mb-3">▤</div>
+          <div className="text-[var(--color-neon)] text-lg mb-3">▤</div>
           <h3 className="font-semibold mb-1">Reports</h3>
           <p className="text-xs text-[var(--color-text-mid)]">
             VC-memo writeups for committee-reviewed candidates
@@ -110,9 +112,9 @@ export default async function DashboardPage() {
         </Link>
         <Link
           href="/dashboard/evaluate"
-          className="panel hover:border-[var(--color-teal)] transition-colors"
+          className="panel hover:border-[var(--color-neon)] transition-colors"
         >
-          <div className="text-[var(--color-teal)] text-lg mb-3">◇</div>
+          <div className="text-[var(--color-neon)] text-lg mb-3">◇</div>
           <h3 className="font-semibold mb-1">Evaluate</h3>
           <p className="text-xs text-[var(--color-text-mid)]">
             Submit your own idea to the committee
@@ -120,9 +122,9 @@ export default async function DashboardPage() {
         </Link>
         <Link
           href="/dashboard/settings"
-          className="panel hover:border-[var(--color-teal)] transition-colors"
+          className="panel hover:border-[var(--color-neon)] transition-colors"
         >
-          <div className="text-[var(--color-teal)] text-lg mb-3">⚙</div>
+          <div className="text-[var(--color-neon)] text-lg mb-3">⚙</div>
           <h3 className="font-semibold mb-1">Settings</h3>
           <p className="text-xs text-[var(--color-text-mid)]">
             Profile, privacy, and usage
@@ -133,7 +135,7 @@ export default async function DashboardPage() {
       {stats.recentRuns.length > 0 && (
         <div className="panel">
           <h3 className="font-semibold mb-4">Recent daily runs</h3>
-          <div className="space-y-2">
+          <div className="stagger-list space-y-2">
             {stats.recentRuns.map((run) => (
               <div
                 key={run.id}
@@ -143,14 +145,15 @@ export default async function DashboardPage() {
                   {run.startedAt.toISOString().slice(0, 19).replace("T", " ")}
                 </span>
                 <span className="text-[var(--color-text-mid)]">
-                  {run.candidatesFound} found · {run.candidatesEscalated} escalated
+                  {run.candidatesFound} found · {run.candidatesEscalated}{" "}
+                  escalated
                 </span>
                 <span
                   className={
                     run.status === "completed"
-                      ? "text-[var(--color-teal)]"
+                      ? "text-[var(--color-neon)]"
                       : run.status === "failed"
-                      ? "text-[var(--color-coral)]"
+                      ? "text-[var(--color-neon-red)]"
                       : "text-[var(--color-amber)]"
                   }
                 >
@@ -161,6 +164,6 @@ export default async function DashboardPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageFade>
   );
 }
