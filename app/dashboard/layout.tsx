@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireUserId } from "@/lib/authz";
 import { signOut } from "@/lib/auth";
+import { Logo } from "@/components/Logo";
 
 export default async function DashboardLayout({
   children,
@@ -12,14 +13,8 @@ export default async function DashboardLayout({
   return (
     <div className="relative z-10 grid grid-cols-[236px_1fr] min-h-screen">
       <aside className="bg-[var(--color-bg-raise)] border-r border-[var(--color-border-soft)] flex flex-col p-6">
-        <div className="flex items-center gap-3 pb-6 border-b border-[var(--color-border-soft)] mb-6">
-          <span className="text-[var(--color-teal)] text-xl">⬡</span>
-          <div className="flex flex-col leading-tight">
-            <span className="font-bold text-[15px]">DealFlow</span>
-            <span className="font-mono text-[10px] text-[var(--color-text-low)] uppercase tracking-wider">
-              deal intelligence
-            </span>
-          </div>
+        <div className="pb-6 border-b border-[var(--color-border-soft)] mb-6">
+          <Logo href="/dashboard" size={28} />
         </div>
 
         <nav className="flex-1 flex flex-col gap-1">
