@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Reveal } from "@/components/Reveal";
-import { Logo } from "@/components/Logo";
 
 export const metadata = {
   title: "Methodology — DealFlow",
@@ -59,35 +58,36 @@ const AGENTS = [
 ];
 
 const RUBRIC_WEIGHTS = [
-  { agent: "Technical", weight: 0.25, note: "Moat, feasibility, technical differentiation" },
-  { agent: "Finance", weight: 0.25, note: "Unit economics, TAM, path to revenue" },
-  { agent: "Marketing", weight: 0.2, note: "Demand, positioning, go-to-market" },
-  { agent: "Legal", weight: 0.1, note: "Regulatory, privacy, IP, compliance" },
-  { agent: "Founder", weight: 0.2, note: "Execution speed, hiring, MVP scope" },
+  {
+    agent: "Technical",
+    weight: 0.25,
+    note: "Moat, feasibility, technical differentiation",
+  },
+  {
+    agent: "Finance",
+    weight: 0.25,
+    note: "Unit economics, TAM, path to revenue",
+  },
+  {
+    agent: "Marketing",
+    weight: 0.2,
+    note: "Demand, positioning, go-to-market",
+  },
+  {
+    agent: "Legal",
+    weight: 0.1,
+    note: "Regulatory, privacy, IP, compliance",
+  },
+  {
+    agent: "Founder",
+    weight: 0.2,
+    note: "Execution speed, hiring, MVP scope",
+  },
 ];
 
 export default function MethodologyPage() {
   return (
     <main className="relative z-10">
-      {/* ─── Nav ──────────────────────────────────────────────── */}
-      <nav className="flex items-center justify-between px-8 py-6 border-b border-[var(--color-border-soft)]">
-        <Logo />
-        <div className="flex items-center gap-3">
-          <Link
-            href="/sample"
-            className="hidden md:inline text-sm text-[var(--color-text-mid)] hover:text-[var(--color-neon)]"
-          >
-            Sample
-          </Link>
-          <Link href="/login" className="btn-ghost">
-            Sign in
-          </Link>
-          <Link href="/signup" className="btn-primary">
-            Get started
-          </Link>
-        </div>
-      </nav>
-
       {/* ─── Hero ─────────────────────────────────────────────── */}
       <section className="px-8 py-16 md:py-24">
         <div className="max-w-3xl mx-auto">
@@ -127,7 +127,9 @@ export default function MethodologyPage() {
               weights. A weighted total of{" "}
               <span className="font-mono text-[var(--color-neon)]">6.5</span>{" "}
               or above produces INVEST; below{" "}
-              <span className="font-mono text-[var(--color-neon-red)]">4.0</span>{" "}
+              <span className="font-mono text-[var(--color-neon-red)]">
+                4.0
+              </span>{" "}
               produces PASS.
             </p>
           </Reveal>
@@ -164,7 +166,9 @@ export default function MethodologyPage() {
               </div>
               <div className="stat-card">
                 <div className="stat-index">PASS threshold</div>
-                <div className="stat-number text-[var(--color-neon-red)]">&lt; 4.0</div>
+                <div className="stat-number text-[var(--color-neon-red)]">
+                  &lt; 4.0
+                </div>
                 <div className="stat-label">weighted /10</div>
               </div>
             </div>
@@ -182,7 +186,7 @@ export default function MethodologyPage() {
             <p className="text-[var(--color-text-mid)] mb-10 max-w-2xl leading-relaxed">
               Each agent is a distinct LLM persona with its own system prompt
               and evaluation criteria. They score independently, then reflect
-              on each other's reasoning in a second round.
+              on each other&apos;s reasoning in a second round.
             </p>
           </Reveal>
 
@@ -242,7 +246,9 @@ export default function MethodologyPage() {
                     <div className="font-semibold mb-1">Auto-approve</div>
                     <div className="text-sm text-[var(--color-text-mid)] leading-relaxed">
                       Every agent scores{" "}
-                      <span className="font-mono text-[var(--color-neon)]">8.5</span>{" "}
+                      <span className="font-mono text-[var(--color-neon)]">
+                        8.5
+                      </span>{" "}
                       or higher in round one. The committee returns INVEST
                       without a reflection round.
                     </div>
@@ -252,12 +258,16 @@ export default function MethodologyPage() {
 
               <div className="panel">
                 <div className="flex items-start gap-4">
-                  <span className="text-[var(--color-neon-red)] text-xl">↓</span>
+                  <span className="text-[var(--color-neon-red)] text-xl">
+                    ↓
+                  </span>
                   <div>
                     <div className="font-semibold mb-1">Auto-reject</div>
                     <div className="text-sm text-[var(--color-text-mid)] leading-relaxed">
                       Every agent scores{" "}
-                      <span className="font-mono text-[var(--color-neon-red)]">3.0</span>{" "}
+                      <span className="font-mono text-[var(--color-neon-red)]">
+                        3.0
+                      </span>{" "}
                       or lower in round one. The committee returns PASS
                       without a reflection round.
                     </div>
@@ -267,7 +277,9 @@ export default function MethodologyPage() {
 
               <div className="panel">
                 <div className="flex items-start gap-4">
-                  <span className="text-[var(--color-text-mid)] text-xl">↔</span>
+                  <span className="text-[var(--color-text-mid)] text-xl">
+                    ↔
+                  </span>
                   <div>
                     <div className="font-semibold mb-1">Mixed scores</div>
                     <div className="text-sm text-[var(--color-text-mid)] leading-relaxed">
@@ -291,7 +303,7 @@ export default function MethodologyPage() {
               Insufficient evidence
             </h2>
             <p className="text-[var(--color-text-mid)] leading-relaxed mb-6">
-              Sometimes the dossier doesn't contain enough information to
+              Sometimes the dossier doesn&apos;t contain enough information to
               make a confident call. Rather than fabricate a score, the
               system flags it.
             </p>
@@ -302,8 +314,8 @@ export default function MethodologyPage() {
               <p className="text-sm text-[var(--color-text-mid)] leading-relaxed">
                 If three or more agents each report three or more{" "}
                 <span className="text-[var(--color-text-hi)]">unknowns</span>{" "}
-                on critical fields — finance, pricing, feasibility,
-                customer, market, or traction — the committee returns{" "}
+                on critical fields — finance, pricing, feasibility, customer,
+                market, or traction — the committee returns{" "}
                 <span className="font-mono text-[var(--color-neon)]">
                   INSUFFICIENT_EVIDENCE
                 </span>{" "}
@@ -378,38 +390,6 @@ export default function MethodologyPage() {
           </Reveal>
         </div>
       </section>
-
-      {/* ─── Footer ───────────────────────────────────────────── */}
-      <footer className="px-8 py-10 border-t border-[var(--color-border-soft)]">
-        <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Image
-              src="/logo.png"
-              alt="DealFlow"
-              width={24}
-              height={24}
-              className="rounded"
-            />
-            <span className="text-sm text-[var(--color-text-low)]">
-              DealFlow — autonomous VC analyst
-            </span>
-          </div>
-          <div className="flex items-center gap-6 text-sm text-[var(--color-text-low)]">
-            <Link href="/" className="hover:text-[var(--color-neon)]">
-              Home
-            </Link>
-            <Link href="/sample" className="hover:text-[var(--color-neon)]">
-              Sample
-            </Link>
-            <Link href="/login" className="hover:text-[var(--color-neon)]">
-              Sign in
-            </Link>
-          </div>
-        </div>
-        <div className="max-w-3xl mx-auto mt-6 text-center text-xs text-[var(--color-text-low)] font-mono">
-          All predictions are LLM-generated estimates, not financial advice.
-        </div>
-      </footer>
     </main>
   );
 }
