@@ -21,12 +21,12 @@ DATA_DIR.mkdir(exist_ok=True)
 # ============================================================================
 # DISCOVERY SOURCES
 # ============================================================================
-
-# Reddit subreddits to monitor
-REDDIT_SUBREDDITS = ["startups", "SideProject", "Entrepreneur"]
-
-# RSS feeds to monitor
 # RSS feeds to monitor.
+#
+# Priority ordering (highest signal first):
+#   1. Funding-focused feeds — companies that just closed a round
+#   2. General startup news
+#   3. Community sources (HN, Reddit)
 #
 # Note on Reddit: the JSON API (reddit.com/r/x.json) requires OAuth since
 # mid-2023 and returns 403 for anonymous requests. The RSS endpoints
@@ -34,13 +34,22 @@ REDDIT_SUBREDDITS = ["startups", "SideProject", "Entrepreneur"]
 # signal. reddit_source.py remains in the codebase as a fallback path
 # but will return 0 candidates until OAuth is added.
 RSS_FEEDS = [
+    # ─── Funding-focused (higher base rate of real startups) ─────
+    "https://techcrunch.com/category/funding/feed/",
+    "https://techcrunch.com/category/venture/feed/",
+    "https://feeds.feedburner.com/venturebeat/SZYF",
+
+    # ─── General startup news ────────────────────────────────────
     "https://techcrunch.com/category/startups/feed/",
+    "https://hackernoon.com/feed",
+
+    # ─── Community ───────────────────────────────────────────────
     "https://news.ycombinator.com/rss",
     "https://www.reddit.com/r/startups/.rss",
     "https://www.reddit.com/r/SideProject/.rss",
     "https://www.reddit.com/r/Entrepreneur/.rss",
-    "https://feeds.feedburner.com/venturebeat/SZYF",
-    "https://hackernoon.com/feed",
+
+    # ─── Products ────────────────────────────────────────────────
     "https://www.producthunt.com/feed",
 ]
 
