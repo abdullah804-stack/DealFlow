@@ -41,33 +41,31 @@ export default async function SettingsPage() {
 
   return (
     <div className="max-w-3xl">
-      <div className="mb-8">
+      <div className="mb-6 md:mb-8">
         <div className="eyebrow">Account</div>
-        <h1 className="text-3xl font-semibold">Settings</h1>
+        <h1 className="text-2xl md:text-3xl font-semibold">Settings</h1>
         <p className="text-[var(--color-text-mid)] text-sm mt-2">
           Your profile, privacy, and usage.
         </p>
       </div>
 
-      {/* ─── Profile ──────────────────────────────────────────── */}
       <section className="panel-lg mb-6">
-        <h2 className="text-lg font-semibold mb-4">Profile</h2>
-
+        <h2 className="text-base md:text-lg font-semibold mb-4">Profile</h2>
         <div className="space-y-4">
           <div>
             <div className="field-label">Name</div>
             <div className="text-sm text-[var(--color-text-hi)]">
-              {user.name ?? <span className="text-[var(--color-text-low)]">Not set</span>}
+              {user.name ?? (
+                <span className="text-[var(--color-text-low)]">Not set</span>
+              )}
             </div>
           </div>
-
           <div>
             <div className="field-label">Email</div>
-            <div className="text-sm text-[var(--color-text-hi)] font-mono">
+            <div className="text-sm text-[var(--color-text-hi)] font-mono break-all">
               {user.email}
             </div>
           </div>
-
           <div>
             <div className="field-label">Member since</div>
             <div className="text-sm text-[var(--color-text-mid)]">
@@ -77,13 +75,12 @@ export default async function SettingsPage() {
         </div>
       </section>
 
-      {/* ─── Usage ────────────────────────────────────────────── */}
       <section className="panel-lg mb-6">
-        <h2 className="text-lg font-semibold mb-4">Usage</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <h2 className="text-base md:text-lg font-semibold mb-4">Usage</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="stat-card">
             <div className="stat-index">Idea evaluations</div>
-            <div className="stat-number text-[var(--color-teal)]">
+            <div className="stat-number text-[var(--color-neon)]">
               {evaluationCount}
             </div>
             <div className="stat-label">
@@ -93,38 +90,37 @@ export default async function SettingsPage() {
         </div>
       </section>
 
-      {/* ─── Privacy & Data ───────────────────────────────────── */}
       <section className="panel-lg mb-6">
-        <h2 className="text-lg font-semibold mb-4">Privacy & Data</h2>
+        <h2 className="text-base md:text-lg font-semibold mb-4">
+          Privacy & Data
+        </h2>
         <p className="text-sm text-[var(--color-text-mid)] leading-relaxed mb-4">
-          Your account data, submissions, and interview answers are stored
-          on our infrastructure and scoped to your account only. No other
-          user can read them, and they are never used to train external
-          models.
+          Your account data, submissions, and interview answers are stored on
+          our infrastructure and scoped to your account only. No other user
+          can read them, and they are never used to train external models.
         </p>
         <p className="text-sm text-[var(--color-text-mid)] leading-relaxed mb-4">
           To request a copy of your data or full account deletion, contact
           support. We respond to all data requests within 30 days.
         </p>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <a
-            href="mailto:privacy@dealflow.example?subject=Data%20request"
-            className="btn-ghost text-sm"
+            href="mailto:Muhammadabd778899@gmail.com?subject=Data%20request"
+            className="btn-ghost text-sm text-center"
           >
             Request data export
           </a>
           <a
-            href="mailto:privacy@dealflow.example?subject=Account%20deletion"
-            className="btn-ghost text-sm"
+            href="mailto:Muhammadabd778899@gmail.com?subject=Account%20deletion"
+            className="btn-ghost text-sm text-center"
           >
             Request account deletion
           </a>
         </div>
       </section>
 
-      {/* ─── Sign out ─────────────────────────────────────────── */}
       <section className="panel-lg">
-        <h2 className="text-lg font-semibold mb-4">Session</h2>
+        <h2 className="text-base md:text-lg font-semibold mb-4">Session</h2>
         <p className="text-sm text-[var(--color-text-mid)] mb-4">
           Sign out of this session. You&apos;ll need to sign in again to
           access your dashboard.

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import { PageFade } from "@/components/PageFade";
 
 type Turn = {
   id: string;
@@ -22,9 +23,9 @@ type Evaluation = {
 
 const SPECIALIST_COLOR: Record<string, string> = {
   technical: "var(--color-blue)",
-  finance: "var(--color-teal)",
+  finance: "var(--color-neon)",
   marketing: "var(--color-amber)",
-  legal: "var(--color-coral)",
+  legal: "var(--color-neon-red)",
   founder: "var(--color-violet)",
 };
 
@@ -114,55 +115,60 @@ export default function ReviewPage() {
   const skipped = turns.filter((t) => t.skipped && !t.answerText);
 
   return (
-    <div className="max-w-3xl">
-      <div className="mb-6">
-        <Link
-          href={`/dashboard/evaluate/${id}/interview`}
-          className="text-[var(--color-text-low)] text-sm hover:text-[var(--color-teal)]"
-        >
-          ← Back to interview
-        </Link>
-      </div>
+    <PageFade>
+      <div className="max-w-3xl mx-auto">
+        <div className="mb-4 md:mb-6">
+          <Link
+            href={`/dashboard/evaluate/${id}/interview`}
+            className="text-[var(--color-text-low)] text-sm hover:text-[var(--color-neon)]"
+          >
+            ← Back to interview
+          </Link>
+        </div>
 
-      <div className="mb-8">
-        <div className="eyebrow">Review · {evaluation.title}</div>
-        <h1 className="text-3xl font-semibold">Review your answers</h1>
-        <p className="text-[var(--color-text-mid)] text-sm mt-2">
-          Edit any answer before the committee runs. {answered.length} answered
-          {skipped.length > 0 && `, ${skipped.length} skipped`}.
-        </p>
-      </div>
+        <div className="mb-6 md:mb-8">
+          <div className="eyebrow">Review · {evaluation.title}</div>
+          <h1 className="text-2xl md:text-3xl font-semibold">
+            Review your answers
+          </h1>
+          <p className="text-[var(--color-text-mid)] text-sm mt-2">
+            Edit any answer before the committee runs. {answered.length}{" "}
+            answered
+            {skipped.length > 0 && `, ${skipped.length} skipped`}.
+          </p>
+        </div>
 
-      <div className="space-y-4 mb-8">
-        {turns.map((turn) => (
-          <TurnEditor
-            key={turn.id}
-            turn={turn}
-            saving={saving === turn.id}
-            onSave={(text) => saveAnswer(turn.id, text)}
-          />
-        ))}
-      </div>
+        <div className="space-y-4 mb-6 md:mb-8">
+          {turns.map((turn) => (
+            <TurnEditor
+              key={turn.id}
+              turn={turn}
+              saving={saving === turn.id}
+              onSave={(text) => saveAnswer(turn.id, text)}
+            />
+          ))}
+        </div>
 
-      {error && (
-        <p className="text-[var(--color-coral)] text-sm mb-4">{error}</p>
-      )}
+        {error && (
+          <p className="text-[var(--color-neon-red)] text-sm mb-4">{error}</p>
+        )}
 
-      <div className="panel-lg text-center">
-        <h3 className="font-semibold mb-2">Ready for evaluation?</h3>
-        <p className="text-sm text-[var(--color-text-mid)] mb-4">
-          The committee will run five specialist assessments plus a full
-          debate. This may take 3–5 minutes.
-        </p>
-        <button
-          onClick={handleFinalize}
-          disabled={starting || answered.length === 0}
-          className="btn-primary"
-        >
-          {starting ? "Starting committee…" : "Run committee evaluation"}
-        </button>
+        <div className="panel-lg text-center">
+          <h3 className="font-semibold mb-2">Ready for evaluation?</h3>
+          <p className="text-sm text-[var(--color-text-mid)] mb-4">
+            The committee will run five specialist assessments plus a full
+            debate. This may take 3–5 minutes.
+          </p>
+          <button
+            onClick={handleFinalize}
+            disabled={starting || answered.length === 0}
+            className="btn-primary w-full sm:w-auto"
+          >
+            {starting ? "Starting committee…" : "Run committee evaluation"}
+          </button>
+        </div>
       </div>
-    </div>
+    </PageFade>
   );
 }
 
@@ -232,7 +238,7 @@ function TurnEditor({
         </>
       ) : (
         <>
-          <div className="pl-4 border-l-2 border-[var(--color-teal)] text-[var(--color-text-mid)] text-sm leading-relaxed whitespace-pre-wrap mb-2">
+          <div className="pl-4 border-l-2 border-[var(--color-neon)] text-[var(--color-text-mid)] text-sm leading-relaxed whitespace-pre-wrap mb-2">
             {turn.answerText || (
               <span className="italic text-[var(--color-text-low)]">
                 Skipped
@@ -242,7 +248,7 @@ function TurnEditor({
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="text-xs font-mono text-[var(--color-teal)] hover:underline"
+            className="text-xs font-mono text-[var(--color-neon)] hover:underline"
           >
             {turn.answerText ? "Edit" : "Add answer"}
           </button>

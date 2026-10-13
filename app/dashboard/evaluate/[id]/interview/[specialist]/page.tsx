@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Spinner } from "@/components/Spinner";
 import {
   AgentSidebar,
@@ -86,7 +87,6 @@ export default function SpecialistInterviewPage() {
     load();
   }, [specialist, evaluationId, load, router]);
 
-  // Turns for the current specialist
   const thisSpecialistTurns = useMemo(() => {
     if (!data?.session || !specialist) return [];
     return data.session.turns.filter((t) => t.specialist === specialist);
@@ -106,7 +106,6 @@ export default function SpecialistInterviewPage() {
 
   const questionIndex = Math.min(answeredCount + 1, 5);
 
-  // Derived progress — always reflects the actual turns on the client.
   const derivedProgress: SpecialistProgress = useMemo(() => {
     const allTurns = data?.session?.turns ?? [];
     const result: SpecialistProgress = { ...FALLBACK_PROGRESS };
@@ -126,8 +125,6 @@ export default function SpecialistInterviewPage() {
     return result;
   }, [data]);
 
-  // Self-heal: if we have no turns for this specialist but the interview
-  // isn't over, the client probably has stale data. Refetch once.
   useEffect(() => {
     if (!data || !specialist || loading) return;
     if (thisSpecialistTurns.length === 0 && !refetchedOnce) {
@@ -143,12 +140,11 @@ export default function SpecialistInterviewPage() {
     load,
   ]);
 
-  // Redirect to the next specialist when this one is exhausted
   useEffect(() => {
     if (!data || !specialist || loading) return;
     if (thisSpecialistTurns.length === 0) return;
 
-      const allDone =
+    const allDone =
       thisSpecialistTurns.length >= 5 &&
       thisSpecialistTurns.every((t) => t.answerText || t.skipped);
     if (!allDone) return;
@@ -180,7 +176,6 @@ export default function SpecialistInterviewPage() {
     setSubmitting(true);
     setError("");
 
-    // Optimistic — hide the form immediately so a second click can't fire.
     setData((prev) => {
       if (!prev?.session) return prev;
       return {
@@ -300,7 +295,7 @@ export default function SpecialistInterviewPage() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <div className="mb-6">
+      <div className="mb-4 md:mb-6">
         <Link
           href="/dashboard/evaluate"
           className="text-[var(--color-text-low)] text-sm hover:text-[var(--color-neon)]"
@@ -309,9 +304,10 @@ export default function SpecialistInterviewPage() {
         </Link>
       </div>
 
-      <div className="mb-8">
+      {/* Header */}
+      <div className="mb-6 md:mb-8">
         <div className="eyebrow">Interview</div>
-        <h1 className="text-2xl md:text-3xl font-semibold mb-1">
+        <h1 className="text-xl md:text-3xl font-semibold mb-1 leading-snug">
           {data?.evaluation.title}
         </h1>
         <p className="text-sm text-[var(--color-text-mid)]">
@@ -319,19 +315,49 @@ export default function SpecialistInterviewPage() {
         </p>
       </div>
 
+      {/* Progress strip */}
       <ProgressStrip
         evaluationId={evaluationId}
         currentSpecialist={specialist}
         progress={derivedProgress}
       />
 
-      <div className="grid md:grid-cols-[280px_1fr] gap-6">
-        <div className="hidden md:block">
-          <AgentSidebar
-            specialist={specialist}
-            questionIndex={questionIndex}
-            totalQuestions={5}
-          />
+      {/* Two-column on desktop, single column on mobile */}
+      <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr] gap-6">
+        {/* Agent sidebar: horizontal compact banner on mobile, full card on desktop */}
+        <div>
+          {/* Mobile-only: horizontal banner */}
+          <div className="md:hidden panel flex items-center gap-4 mb-4">
+            <div className="relative w-16 h-16 flex-shrink-0 rounded-full overflow-hidden border border-[var(--color-border)]">
+              <Image
+                src={meta.image}
+                alt={meta.name}
+                fill
+                sizes="64px"
+                className="object-cover object-top"
+              />
+            </div>
+            <div className="min-w-0">
+              <div className="font-semibold text-sm mb-0.5 truncate">
+                {meta.name}
+              </div>
+              <div className="font-mono text-[10px] text-[var(--color-text-low)] uppercase tracking-wider mb-1">
+                {meta.title}
+              </div>
+              <div className="font-mono text-xs text-[var(--color-neon)]">
+                Question {questionIndex} of 5
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop-only: full sidebar card */}
+          <div className="hidden md:block">
+            <AgentSidebar
+              specialist={specialist}
+              questionIndex={questionIndex}
+              totalQuestions={5}
+            />
+          </div>
         </div>
 
         <div className="space-y-6">
@@ -359,7 +385,7 @@ export default function SpecialistInterviewPage() {
                   onChange={(e) => setAnswer(e.target.value)}
                   placeholder="Type your answer…"
                 />
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <span className="text-xs text-[var(--color-text-low)] font-mono">
                     {answer.length}/2000
                   </span>
@@ -368,14 +394,14 @@ export default function SpecialistInterviewPage() {
                       type="button"
                       disabled={submitting}
                       onClick={handleSkip}
-                      className="btn-ghost"
+                      className="btn-ghost flex-1 sm:flex-none"
                     >
                       Skip
                     </button>
                     <button
                       type="submit"
                       disabled={submitting || !answer.trim()}
-                      className="btn-primary"
+                      className="btn-primary flex-1 sm:flex-none"
                     >
                       {submitting ? (
                         <span className="inline-flex items-center gap-2">

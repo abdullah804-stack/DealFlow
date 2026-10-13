@@ -54,14 +54,13 @@ export default async function EvaluationReportPage({
 
   if (!evaluation) notFound();
 
-  // Not yet evaluated
   if (evaluation.status !== "complete" || !evaluation.candidate) {
     return (
       <div className="max-w-2xl">
         <div className="mb-6">
           <Link
             href={`/dashboard/evaluate/${id}`}
-            className="text-[var(--color-text-low)] text-sm hover:text-[var(--color-teal)]"
+            className="text-[var(--color-text-low)] text-sm hover:text-[var(--color-neon)]"
           >
             ← Back to evaluation
           </Link>
@@ -70,8 +69,8 @@ export default async function EvaluationReportPage({
           <div className="empty-icon">◌</div>
           <h3>No report yet</h3>
           <p className="text-[var(--color-text-mid)] text-sm mt-2 mb-6">
-            Status: <span className="font-mono">{evaluation.status}</span>. The
-            committee evaluation engine ships in Phase 6. Your interview
+            Status: <span className="font-mono">{evaluation.status}</span>.
+            The committee evaluation engine ships in Phase 6. Your interview
             answers are saved and the report will appear here once the engine
             runs.
           </p>
@@ -106,8 +105,8 @@ export default async function EvaluationReportPage({
         <div className="empty-state">
           <h3>Report pending</h3>
           <p className="text-[var(--color-text-mid)] text-sm mt-2">
-            The committee finished but no report was written. This shouldn&apos;t
-            happen — please contact support.
+            The committee finished but no report was written. This
+            shouldn&apos;t happen — please contact support.
           </p>
         </div>
       </div>
@@ -126,19 +125,19 @@ export default async function EvaluationReportPage({
 
   return (
     <div className="max-w-4xl">
-      <div className="mb-6">
+      <div className="mb-4 md:mb-6">
         <Link
           href="/dashboard/evaluate"
-          className="text-[var(--color-text-low)] text-sm hover:text-[var(--color-teal)]"
+          className="text-[var(--color-text-low)] text-sm hover:text-[var(--color-neon)]"
         >
           ← Back to evaluations
         </Link>
       </div>
 
-      <div className="mb-8">
+      <div className="mb-6 md:mb-8">
         <div className="eyebrow">Your evaluation</div>
-        <div className="flex items-start justify-between gap-4">
-          <h1 className="text-3xl font-semibold">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
+          <h1 className="text-2xl md:text-3xl font-semibold leading-snug break-words">
             {report.company ?? evaluation.title}
           </h1>
           {report.decision && (
@@ -151,7 +150,7 @@ export default async function EvaluationReportPage({
             </span>
           )}
         </div>
-        <div className="flex items-center gap-3 mt-2 text-xs font-mono text-[var(--color-text-low)]">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs font-mono text-[var(--color-text-low)]">
           <span>{report.createdAt.toISOString().slice(0, 10)}</span>
           {typeof report.weightedScore === "number" && (
             <>
@@ -162,7 +161,7 @@ export default async function EvaluationReportPage({
         </div>
       </div>
 
-	      <div className="mb-6">
+      <div className="mb-4 md:mb-6">
         <a
           href={`/api/v1/idea-evaluations/${id}/report/pdf`}
           className="btn-ghost inline-block text-sm"
@@ -171,7 +170,7 @@ export default async function EvaluationReportPage({
         </a>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 md:mb-8">
         {typeof starRating === "number" && (
           <div className="stat-card">
             <div className="stat-index">Rating</div>
@@ -187,7 +186,7 @@ export default async function EvaluationReportPage({
         {typeof probability === "number" && (
           <div className="stat-card">
             <div className="stat-index">Est. success</div>
-            <div className="stat-number text-[var(--color-teal)]">
+            <div className="stat-number text-[var(--color-neon)]">
               {probability}%
             </div>
             <div className="stat-label">LLM estimate</div>
@@ -205,10 +204,10 @@ export default async function EvaluationReportPage({
       </div>
 
       {(biggestRisk || biggestAdvantage) && (
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 md:mb-8">
           {biggestAdvantage && (
             <div className="panel">
-              <div className="eyebrow text-[var(--color-teal)]">
+              <div className="eyebrow text-[var(--color-neon)]">
                 Biggest advantage
               </div>
               <p className="text-sm text-[var(--color-text-hi)] leading-relaxed">
@@ -218,7 +217,7 @@ export default async function EvaluationReportPage({
           )}
           {biggestRisk && (
             <div className="panel">
-              <div className="eyebrow text-[var(--color-coral)]">
+              <div className="eyebrow text-[var(--color-neon-red)]">
                 Biggest risk
               </div>
               <p className="text-sm text-[var(--color-text-hi)] leading-relaxed">
@@ -239,7 +238,9 @@ export default async function EvaluationReportPage({
             .join(" ");
           return (
             <div key={key} className="panel-lg">
-              <h2 className="text-lg font-semibold mb-3">{title}</h2>
+              <h2 className="text-base md:text-lg font-semibold mb-3">
+                {title}
+              </h2>
               <p className="text-sm leading-relaxed whitespace-pre-wrap text-[var(--color-text-mid)]">
                 {value}
               </p>

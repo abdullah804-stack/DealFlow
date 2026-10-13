@@ -24,29 +24,94 @@ type FieldDef = {
 };
 
 const FIELDS: FieldDef[] = [
-  { key: "title", label: "Idea title", required: true, max: 200, placeholder: "AI Legal Research" },
-  { key: "oneLiner", label: "One-liner", required: true, max: 500, placeholder: "AI that helps law firms research cases 10x faster" },
-  { key: "problem", label: "What problem does it solve?", required: true, max: 2000, textarea: true, placeholder: "Lawyers spend hours searching precedent across databases..." },
-  { key: "solution", label: "What is your solution?", required: true, max: 2000, textarea: true, placeholder: "An AI agent that indexes case law and surfaces relevant precedent in seconds..." },
-  { key: "targetMarket", label: "Target market", required: false, max: 1000, placeholder: "Mid-size US law firms, 20-200 attorneys" },
-  { key: "businessModel", label: "Business model", required: false, max: 1000, placeholder: "SaaS subscription, $500/user/month" },
-  { key: "teamBackground", label: "Team background", required: false, max: 1000, placeholder: "2 ex-lawyers + 1 ML engineer from Google" },
-  { key: "competitors", label: "Competitors", required: false, max: 1000, placeholder: "LexisNexis, Westlaw, Casetext" },
-  { key: "fundingStage", label: "Funding stage", required: false, max: 100, placeholder: "Pre-seed" },
-  { key: "askAmount", label: "Ask amount", required: false, max: 100, placeholder: "$500k" },
+  {
+    key: "title",
+    label: "Idea title",
+    required: true,
+    max: 200,
+    placeholder: "AI Legal Research",
+  },
+  {
+    key: "oneLiner",
+    label: "One-liner",
+    required: true,
+    max: 500,
+    placeholder: "AI that helps law firms research cases 10x faster",
+  },
+  {
+    key: "problem",
+    label: "What problem does it solve?",
+    required: true,
+    max: 2000,
+    textarea: true,
+    placeholder: "Lawyers spend hours searching precedent across databases...",
+  },
+  {
+    key: "solution",
+    label: "What is your solution?",
+    required: true,
+    max: 2000,
+    textarea: true,
+    placeholder:
+      "An AI agent that indexes case law and surfaces relevant precedent in seconds...",
+  },
+  {
+    key: "targetMarket",
+    label: "Target market",
+    required: false,
+    max: 1000,
+    placeholder: "Mid-size US law firms, 20-200 attorneys",
+  },
+  {
+    key: "businessModel",
+    label: "Business model",
+    required: false,
+    max: 1000,
+    placeholder: "SaaS subscription, $500/user/month",
+  },
+  {
+    key: "teamBackground",
+    label: "Team background",
+    required: false,
+    max: 1000,
+    placeholder: "2 ex-lawyers + 1 ML engineer from Google",
+  },
+  {
+    key: "competitors",
+    label: "Competitors",
+    required: false,
+    max: 1000,
+    placeholder: "LexisNexis, Westlaw, Casetext",
+  },
+  {
+    key: "fundingStage",
+    label: "Funding stage",
+    required: false,
+    max: 100,
+    placeholder: "Pre-seed",
+  },
+  {
+    key: "askAmount",
+    label: "Ask amount",
+    required: false,
+    max: 100,
+    placeholder: "$500k",
+  },
 ];
-
-type FieldKey = (typeof FIELDS)[number]["key"];
 
 export default function NewEvaluationPage() {
   const router = useRouter();
-  const [values, setValues] = useState<Record<FieldKey, string>>(() =>
-    Object.fromEntries(FIELDS.map((f) => [f.key, ""])) as Record<FieldKey, string>
+  const [values, setValues] = useState<Record<FieldDef["key"], string>>(
+    () =>
+      Object.fromEntries(FIELDS.map((f) => [f.key, ""])) as Record<
+        FieldDef["key"],
+        string
+      >
   );
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  function setField(key: FieldKey, value: string) {
+  function setField(key: FieldDef["key"], value: string) {
     setValues((v) => ({ ...v, [key]: value }));
   }
 
@@ -84,15 +149,17 @@ export default function NewEvaluationPage() {
       <div className="mb-6">
         <Link
           href="/dashboard/evaluate"
-          className="text-[var(--color-text-low)] text-sm hover:text-[var(--color-teal)]"
+          className="text-[var(--color-text-low)] text-sm hover:text-[var(--color-neon)]"
         >
           ← Back to evaluations
         </Link>
       </div>
 
-      <div className="mb-8">
+      <div className="mb-6 md:mb-8">
         <div className="eyebrow">New evaluation</div>
-        <h1 className="text-3xl font-semibold">Submit your idea</h1>
+        <h1 className="text-2xl md:text-3xl font-semibold">
+          Submit your idea
+        </h1>
         <p className="text-[var(--color-text-mid)] text-sm mt-2">
           Fill in the basics. The committee will then interview you with up to
           25 questions before evaluating.
@@ -136,9 +203,7 @@ export default function NewEvaluationPage() {
           </div>
         ))}
 
-        {error && (
-          <p className="text-[var(--color-coral)] text-sm">{error}</p>
-        )}
+        {error && <p className="text-[var(--color-neon-red)] text-sm">{error}</p>}
 
         <button
           type="submit"
