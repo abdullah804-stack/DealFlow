@@ -4,7 +4,7 @@
 
 DealFlow is an autonomous investment committee. Every day it discovers early-stage startups, filters them through a validation layer, and runs the strongest candidates through a five-agent committee that debates and votes, entirely without human intervention.
 
-![DealFlow hero](docs/images/hero.png)
+![DealFlow hero](docs/images/hero-dealflow.png)
 
 **Live app:** [deal-flow-pearl.vercel.app](https://deal-flow-pearl.vercel.app)
 
@@ -33,8 +33,6 @@ DealFlow runs as a three-stage pipeline.
 | 01 | **Discover** | A scheduled Python process pulls fresh candidates from Hacker News, Reddit, startup RSS feeds, and the YC directory. Each candidate is classified with an LLM pass and deduplicated by canonical domain. |
 | 02 | **Evaluate** | The five-agent committee scores the dossier independently (each specialist has its own system prompt, mandate, and criteria), then reflects. Voting is deterministic code. |
 | 03 | **Decide** | Weighted scoring produces `INVEST`, `PASS`, or `INSUFFICIENT_EVIDENCE`. Every result is stored with full disagreement history and a versioned rubric. |
-
-![Pipeline](docs/images/pipeline.png)
 
 ---
 
@@ -130,27 +128,32 @@ Individual source refresh cadences run independently of the main job:
 ## Screenshots
 
 ### Dashboard: Today's Pick
-![Dashboard](docs/images/dashboard.png)
+![Dashboard](docs/images/dashboard-dealflow.png)
 
 ### Discover feed
 Every candidate from the daily pipeline.
 
-![Discover feed](docs/images/discover.png)
+![Discover feed](docs/images/discover-dealflow.png)
 
 ### Committee evaluation
 Five specialists, one vote.
 
-![Committee evaluation](docs/images/committee.png)
+![Committee evaluation](docs/images/committee-dealflow.png)
 
 ### Evaluation report
 The full investment memo.
 
-![Evaluation report](docs/images/report.png)
+![Evaluation report](docs/images/sample%20report-dealflow.png)
 
 ### Specialist deep dive
 The Technical Agent in action.
 
-![Specialist deep dive](docs/images/specialist.png)
+![Specialist deep dive](docs/images/agent%20interview-dealflow.png)
+
+### PDF export
+Every memo can be exported as a PDF.
+
+![PDF export](docs/images/pdf-dealflow.png)
 
 ---
 
