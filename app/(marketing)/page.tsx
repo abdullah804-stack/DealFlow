@@ -101,7 +101,7 @@ export default async function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           1. HERO
          ═══════════════════════════════════════════════════════ */}
-      <section className="relative px-6 md:px-8 py-16 md:py-32">
+      <section className="relative px-6 md:px-8 py-8 md:py-32">
         <div
           className="glow-orb glow-orb-neon glow-orb-animate"
           style={{ width: 380, height: 380, top: -120, left: "10%" }}
@@ -152,7 +152,7 @@ export default async function LandingPage() {
           </Reveal>
 
           <Reveal delay={500}>
-            <div className="mt-12 md:mt-20 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-2xl mx-auto">
+            <div className="mt-8 md:mt-20 grid grid-cols-3 gap-3 md:gap-6 max-w-2xl mx-auto">
               <StatBlock value={stats.candidates} label="Candidates discovered" />
               <StatBlock value={stats.reports} label="Reports generated" />
               <StatBlock value={stats.evaluations} label="Ideas evaluated" />

@@ -1090,3 +1090,13 @@ input {
     -ms-overflow-style: none;
   }
 }
+
+/* On mobile, the header is always solid so it never overlaps hero text */
+@media (max-width: 767px) {
+  .site-header-transparent {
+    background: rgba(5, 5, 5, 0.85);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border-bottom-color: var(--color-border-soft);
+  }
+}
