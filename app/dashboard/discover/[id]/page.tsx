@@ -43,18 +43,21 @@ export default async function CandidateDetailPage({
       <div className="mb-6">
         <Link
           href="/dashboard/discover"
-          className="text-[var(--color-text-low)] text-sm hover:text-[var(--color-teal)]"
+          className="text-[var(--color-text-low)] text-sm hover:text-[var(--color-neon)]"
         >
           ← Back to discover
         </Link>
       </div>
 
-      <div className="mb-8 flex items-start justify-between">
-        <div>
+      {/* Header */}
+      <div className="mb-6 md:mb-8 flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
+        <div className="min-w-0">
           <div className="eyebrow">Candidate</div>
-          <h1 className="text-3xl font-semibold mb-2">{candidate.title}</h1>
-          <div className="flex items-center gap-3 text-xs font-mono text-[var(--color-text-low)]">
-            <span>{candidate.source}</span>
+          <h1 className="text-2xl md:text-3xl font-semibold mb-2 leading-snug break-words">
+            {candidate.title}
+          </h1>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-mono text-[var(--color-text-low)]">
+            <span className="break-all">{candidate.source}</span>
             <span>·</span>
             <span>{candidate.firstSeen.toISOString().slice(0, 10)}</span>
             {candidate.url && (
@@ -64,7 +67,7 @@ export default async function CandidateDetailPage({
                   href={candidate.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[var(--color-teal)] hover:underline"
+                  className="text-[var(--color-neon)] hover:underline"
                 >
                   original source ↗
                 </a>
@@ -83,30 +86,36 @@ export default async function CandidateDetailPage({
         )}
       </div>
 
-      <div className="grid grid-cols-[2fr_1fr] gap-6">
+      {/* Content: single column on mobile, 2 columns on desktop */}
+      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
         <div className="space-y-6">
           {dossier && (
             <div className="panel-lg">
               <h2 className="text-lg font-semibold mb-4">Dossier</h2>
               <div className="space-y-3 text-sm">
-                {Object.entries(dossier.dossierJson as Record<string, unknown>).map(
-                  ([key, value]) => (
-                    <div key={key} className="grid grid-cols-[140px_1fr] gap-4">
-                      <span className="text-[var(--color-text-low)] font-mono text-xs uppercase tracking-wide pt-0.5">
-                        {key.replace(/_/g, " ")}
-                      </span>
-                      <span className="text-[var(--color-text-hi)]">
-                        {Array.isArray(value)
-                          ? value.length > 0
-                            ? value.join(", ")
-                            : "—"
-                          : value === null || value === undefined || value === ""
-                          ? "—"
-                          : String(value)}
-                      </span>
-                    </div>
-                  )
-                )}
+                {Object.entries(
+                  dossier.dossierJson as Record<string, unknown>
+                ).map(([key, value]) => (
+                  <div
+                    key={key}
+                    className="grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-4"
+                  >
+                    <span className="text-[var(--color-text-low)] font-mono text-xs uppercase tracking-wide">
+                      {key.replace(/_/g, " ")}
+                    </span>
+                    <span className="text-[var(--color-text-hi)] break-words">
+                      {Array.isArray(value)
+                        ? value.length > 0
+                          ? value.join(", ")
+                          : "—"
+                        : value === null ||
+                          value === undefined ||
+                          value === ""
+                        ? "—"
+                        : String(value)}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -127,13 +136,17 @@ export default async function CandidateDetailPage({
               <h3 className="font-semibold mb-4">Final decision</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-[var(--color-text-low)]">Weighted score</span>
+                  <span className="text-[var(--color-text-low)]">
+                    Weighted score
+                  </span>
                   <span className="font-mono">
                     {decision.weightedScore.toFixed(2)}/10
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[var(--color-text-low)]">Fast path</span>
+                  <span className="text-[var(--color-text-low)]">
+                    Fast path
+                  </span>
                   <span className="font-mono">{decision.fastPath ?? "none"}</span>
                 </div>
                 <div className="flex justify-between">
@@ -151,14 +164,16 @@ export default async function CandidateDetailPage({
                 {round1.map((a) => (
                   <div key={a.id} className="text-sm">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="font-medium capitalize">{a.agentType}</span>
+                      <span className="font-medium capitalize">
+                        {a.agentType}
+                      </span>
                       <span className="font-mono text-[var(--color-text-mid)]">
                         {a.score.toFixed(1)}/10
                       </span>
                     </div>
                     <div className="h-1 bg-[var(--color-border-soft)] rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-[var(--color-teal)]"
+                        className="h-full bg-[var(--color-neon)]"
                         style={{ width: `${(a.score / 10) * 100}%` }}
                       />
                     </div>
@@ -175,14 +190,16 @@ export default async function CandidateDetailPage({
                 {round2.map((a) => (
                   <div key={a.id} className="text-sm">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="font-medium capitalize">{a.agentType}</span>
+                      <span className="font-medium capitalize">
+                        {a.agentType}
+                      </span>
                       <span className="font-mono text-[var(--color-text-mid)]">
                         {a.score.toFixed(1)}/10
                       </span>
                     </div>
                     <div className="h-1 bg-[var(--color-border-soft)] rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-[var(--color-coral)]"
+                        className="h-full bg-[var(--color-neon-red)]"
                         style={{ width: `${(a.score / 10) * 100}%` }}
                       />
                     </div>

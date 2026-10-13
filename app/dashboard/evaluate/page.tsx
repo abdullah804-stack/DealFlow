@@ -24,16 +24,22 @@ export default async function EvaluateListPage() {
 
   return (
     <PageFade>
-      <div className="mb-8 flex items-start justify-between">
+      {/* Header: stacked on mobile, side-by-side on desktop */}
+      <div className="mb-6 md:mb-8 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div>
           <div className="eyebrow">Evaluate</div>
-          <h1 className="text-3xl font-semibold">Your submissions</h1>
+          <h1 className="text-2xl md:text-3xl font-semibold">
+            Your submissions
+          </h1>
           <p className="text-[var(--color-text-mid)] text-sm mt-2">
             Submit your own idea, answer the committee&apos;s questions, and
             get a full evaluation.
           </p>
         </div>
-        <Link href="/dashboard/evaluate/new" className="btn-primary">
+        <Link
+          href="/dashboard/evaluate/new"
+          className="btn-primary text-sm text-center md:flex-shrink-0"
+        >
           New submission
         </Link>
       </div>
@@ -76,26 +82,28 @@ export default async function EvaluateListPage() {
                 href={href}
                 className="panel block transition-colors"
               >
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-semibold truncate">{e.title}</h3>
-                    <p className="text-sm text-[var(--color-text-mid)] mt-1 line-clamp-1">
+                    <h3 className="font-semibold text-[15px] md:text-base leading-snug line-clamp-2 md:truncate">
+                      {e.title}
+                    </h3>
+                    <p className="text-sm text-[var(--color-text-mid)] mt-1 line-clamp-2 md:line-clamp-1">
                       {e.oneLiner}
                     </p>
-                    <div className="flex items-center gap-3 mt-2 text-xs text-[var(--color-text-low)] font-mono">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-[11px] md:text-xs text-[var(--color-text-low)] font-mono">
                       <span>{e.createdAt.toISOString().slice(0, 10)}</span>
-                      <span>·</span>
+                      <span className="text-[var(--color-border)]">·</span>
                       <span>{statusLabel}</span>
                     </div>
                   </div>
                   <span
-                    className={
+                    className={`${
                       isComplete
                         ? "badge-invest"
                         : isFailed
                         ? "badge-pass"
-                        : "font-mono text-xs text-[var(--color-text-mid)]"
-                    }
+                        : "font-mono text-xs text-[var(--color-text-mid)] uppercase tracking-wider"
+                    } self-start md:self-center flex-shrink-0`}
                   >
                     {isComplete ? "COMPLETE" : isFailed ? "PARTIAL" : "→"}
                   </span>

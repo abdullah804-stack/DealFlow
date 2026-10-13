@@ -4,11 +4,6 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-type ReportSection = {
-  title?: string;
-  body?: string;
-};
-
 export default async function ReportDetailPage({
   params,
 }: {
@@ -49,16 +44,17 @@ export default async function ReportDetailPage({
       <div className="mb-6">
         <Link
           href="/dashboard/reports"
-          className="text-[var(--color-text-low)] text-sm hover:text-[var(--color-teal)]"
+          className="text-[var(--color-text-low)] text-sm hover:text-[var(--color-neon)]"
         >
           ← Back to reports
         </Link>
       </div>
 
-      <div className="mb-8">
+      {/* Header */}
+      <div className="mb-6 md:mb-8">
         <div className="eyebrow">Investment memo</div>
-        <div className="flex items-start justify-between gap-4">
-          <h1 className="text-3xl font-semibold">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
+          <h1 className="text-2xl md:text-3xl font-semibold leading-snug break-words">
             {report.company ?? "Unknown company"}
           </h1>
           {report.decision && (
@@ -71,7 +67,7 @@ export default async function ReportDetailPage({
             </span>
           )}
         </div>
-        <div className="flex items-center gap-3 mt-2 text-xs font-mono text-[var(--color-text-low)]">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs font-mono text-[var(--color-text-low)]">
           <span>{report.createdAt.toISOString().slice(0, 10)}</span>
           <span>·</span>
           <span>schema {report.schemaVersion}</span>
@@ -93,7 +89,8 @@ export default async function ReportDetailPage({
         </a>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      {/* Stat grid: 1 col mobile, 3 cols desktop */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 md:mb-8">
         {typeof starRating === "number" && (
           <div className="stat-card">
             <div className="stat-index">Rating</div>
@@ -109,7 +106,7 @@ export default async function ReportDetailPage({
         {typeof probability === "number" && (
           <div className="stat-card">
             <div className="stat-index">Est. success</div>
-            <div className="stat-number text-[var(--color-teal)]">
+            <div className="stat-number text-[var(--color-neon)]">
               {probability}%
             </div>
             <div className="stat-label">LLM estimate</div>
@@ -127,10 +124,10 @@ export default async function ReportDetailPage({
       </div>
 
       {(biggestRisk || biggestAdvantage) && (
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 md:mb-8">
           {biggestAdvantage && (
             <div className="panel">
-              <div className="eyebrow text-[var(--color-teal)]">
+              <div className="eyebrow text-[var(--color-neon)]">
                 Biggest advantage
               </div>
               <p className="text-sm text-[var(--color-text-hi)] leading-relaxed">
@@ -140,7 +137,7 @@ export default async function ReportDetailPage({
           )}
           {biggestRisk && (
             <div className="panel">
-              <div className="eyebrow text-[var(--color-coral)]">
+              <div className="eyebrow text-[var(--color-neon-red)]">
                 Biggest risk
               </div>
               <p className="text-sm text-[var(--color-text-hi)] leading-relaxed">
@@ -161,7 +158,9 @@ export default async function ReportDetailPage({
             .join(" ");
           return (
             <div key={key} className="panel-lg">
-              <h2 className="text-lg font-semibold mb-3">{title}</h2>
+              <h2 className="text-base md:text-lg font-semibold mb-3">
+                {title}
+              </h2>
               <p className="text-sm leading-relaxed whitespace-pre-wrap text-[var(--color-text-mid)]">
                 {value}
               </p>
