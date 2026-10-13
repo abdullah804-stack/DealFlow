@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 
 export type AgentStripItem = {
   key: string;
@@ -11,13 +12,7 @@ export type AgentStripItem = {
   description: string;
 };
 
-export function AgentStrip({
-  agents,
-  renderCard,
-}: {
-  agents: AgentStripItem[];
-  renderCard: (agent: AgentStripItem) => React.ReactNode;
-}) {
+export function AgentStrip({ agents }: { agents: AgentStripItem[] }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -89,7 +84,40 @@ export function AgentStrip({
             key={agent.key}
             className="snap-center flex-shrink-0 w-full min-w-full"
           >
-            {renderCard(agent)}
+            <div
+              className="agent-card group"
+              tabIndex={0}
+              aria-label={`${agent.name}, ${agent.title}`}
+            >
+              <div className="agent-card-glow" aria-hidden />
+              <div className="agent-card-scan" aria-hidden />
+
+              <div className="relative w-full aspect-[3/4] z-10">
+                <Image
+                  src={agent.image}
+                  alt={agent.name}
+                  fill
+                  sizes="90vw"
+                  className="object-contain object-bottom agent-card-image"
+                  priority={false}
+                />
+              </div>
+
+              <div className="p-3 text-center flex flex-col items-center relative z-10">
+                <div className="font-semibold text-[13px] mb-1 transition-colors group-hover:text-[var(--color-neon)]">
+                  {agent.name}
+                </div>
+                <div className="font-mono text-[9px] text-[var(--color-text-low)] uppercase tracking-wider mb-2">
+                  {agent.title}
+                </div>
+                <div className="font-mono text-xs text-[var(--color-neon)] mb-3 transition-all group-hover:drop-shadow-[0_0_8px_var(--color-neon-glow)]">
+                  {agent.weight}
+                </div>
+                <p className="text-[10px] text-[var(--color-text-mid)] leading-relaxed">
+                  {agent.description}
+                </p>
+              </div>
+            </div>
           </div>
         ))}
       </div>

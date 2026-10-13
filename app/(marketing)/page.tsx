@@ -282,11 +282,8 @@ export default async function LandingPage() {
           </Reveal>
 
           {/* Mobile: auto-scrolling strip. Desktop: 5-col grid. */}
-          <div className="md:hidden">
-            <AgentStrip
-              agents={AGENTS}
-              renderCard={(agent) => <AgentCard agent={agent} />}
-            />
+                    <div className="md:hidden">
+            <AgentStrip agents={AGENTS} />
           </div>
           <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
             {AGENTS.map((agent, i) => (
