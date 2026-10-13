@@ -60,7 +60,7 @@ const FAQ = [
   },
   {
     q: "Where do the discovered startups come from?",
-    a: "Hacker News, Reddit, and a short list of startup RSS feeds. We do not use Product Hunt, AngelList, or GitHub Trending — none of them offer reliable free access at scale.",
+    a: "Hacker News, Reddit, startup RSS feeds, and the Y Combinator company directory. We do not use Product Hunt, AngelList, or GitHub Trending — none of them offer reliable free access at scale.",
   },
   {
     q: "How is this different from just asking ChatGPT?",
@@ -101,20 +101,19 @@ export default async function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           1. HERO
          ═══════════════════════════════════════════════════════ */}
-      <section className="relative px-8 py-24 md:py-32">
-        {/* ambient glow */}
+      <section className="relative px-6 md:px-8 py-16 md:py-32">
         <div
           className="glow-orb glow-orb-neon glow-orb-animate"
-          style={{ width: 480, height: 480, top: -120, left: "20%" }}
+          style={{ width: 380, height: 380, top: -120, left: "10%" }}
           aria-hidden
         />
         <div
           className="glow-orb glow-orb-red glow-orb-animate"
           style={{
-            width: 400,
-            height: 400,
+            width: 320,
+            height: 320,
             top: 100,
-            right: "-10%",
+            right: "-20%",
             animationDelay: "3s",
           }}
           aria-hidden
@@ -127,14 +126,14 @@ export default async function LandingPage() {
             </div>
           </Reveal>
           <Reveal delay={100}>
-            <h1 className="text-5xl md:text-6xl font-semibold text-center leading-[1.08] tracking-tight mb-6">
+            <h1 className="text-4xl md:text-6xl font-semibold text-center leading-[1.1] md:leading-[1.08] tracking-tight mb-6">
               An analyst that never
               <br />
               <span className="gradient-text-neon">closes its terminal.</span>
             </h1>
           </Reveal>
           <Reveal delay={200}>
-            <p className="text-[var(--color-text-mid)] text-lg md:text-xl leading-relaxed max-w-2xl mx-auto text-center mb-10">
+            <p className="text-[var(--color-text-mid)] text-base md:text-xl leading-relaxed max-w-2xl mx-auto text-center mb-8 md:mb-10">
               DealFlow discovers new startups every day, filters them through
               a validation layer, and runs the strongest candidates through a
               five-agent investment committee that debates and votes —
@@ -142,18 +141,18 @@ export default async function LandingPage() {
             </p>
           </Reveal>
           <Reveal delay={300}>
-            <div className="flex items-center justify-center gap-4 flex-wrap">
-              <Link href="/signup" className="btn-primary">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+              <Link href="/signup" className="btn-primary w-full sm:w-auto text-center">
                 Start exploring
               </Link>
-              <Link href="/sample" className="btn-ghost">
+              <Link href="/sample" className="btn-ghost w-full sm:w-auto text-center">
                 See a sample report
               </Link>
             </div>
           </Reveal>
 
           <Reveal delay={500}>
-            <div className="mt-20 grid grid-cols-3 gap-6 max-w-2xl mx-auto">
+            <div className="mt-12 md:mt-20 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-2xl mx-auto">
               <StatBlock value={stats.candidates} label="Candidates discovered" />
               <StatBlock value={stats.reports} label="Reports generated" />
               <StatBlock value={stats.evaluations} label="Ideas evaluated" />
@@ -167,18 +166,18 @@ export default async function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           2. THE PROBLEM
          ═══════════════════════════════════════════════════════ */}
-      <section className="relative px-8 py-24">
+      <section className="relative px-6 md:px-8 py-16 md:py-24">
         <div className="max-w-4xl mx-auto text-center">
           <Reveal>
             <div className="eyebrow mb-4">The problem</div>
           </Reveal>
           <Reveal delay={100}>
-            <h2 className="section-heading text-3xl md:text-5xl font-semibold leading-tight mb-8">
-  There are more startups every day than any investor can track.
-</h2>
+            <h2 className="text-2xl md:text-5xl font-semibold leading-tight mb-6 md:mb-8">
+              There are more startups every day than any investor can track.
+            </h2>
           </Reveal>
           <Reveal delay={200}>
-            <p className="text-[var(--color-text-mid)] text-lg leading-relaxed max-w-2xl mx-auto mb-6">
+            <p className="text-[var(--color-text-mid)] text-base md:text-lg leading-relaxed max-w-2xl mx-auto mb-6">
               Every 24 hours, thousands of founders launch something. A
               handful are genuinely worth attention. The signal is buried in
               the noise — Hacker News posts, Reddit threads, and RSS feeds
@@ -186,7 +185,7 @@ export default async function LandingPage() {
             </p>
           </Reveal>
           <Reveal delay={300}>
-            <p className="text-[var(--color-text-mid)] text-lg leading-relaxed max-w-2xl mx-auto">
+            <p className="text-[var(--color-text-mid)] text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
               Human analysts triage a fraction of it. DealFlow triages all of
               it — every single day, without being asked.
             </p>
@@ -199,29 +198,29 @@ export default async function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           3. HOW IT WORKS
          ═══════════════════════════════════════════════════════ */}
-      <section className="relative px-8 py-24">
+      <section className="relative px-6 md:px-8 py-16 md:py-24">
         <div
           className="glow-orb glow-orb-neon glow-orb-animate"
-          style={{ width: 400, height: 400, top: "20%", left: "-10%" }}
+          style={{ width: 320, height: 320, top: "20%", left: "-20%" }}
           aria-hidden
         />
         <div className="max-w-5xl mx-auto relative">
           <Reveal>
-            <div className="text-center mb-16">
+            <div className="text-center mb-10 md:mb-16">
               <div className="eyebrow mb-4">How it works</div>
-              <h2 className="section-heading text-3xl md:text-4xl font-semibold">
-  Three stages, one pipeline.
-</h2>
+              <h2 className="text-2xl md:text-4xl font-semibold">
+                Three stages, one pipeline.
+              </h2>
             </div>
           </Reveal>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Reveal delay={100}>
               <StageCard
                 index="01"
                 title="Discover"
                 glyph="▽"
-                body="Pulls fresh candidates from Hacker News, Reddit, and startup RSS feeds. Classifies each one with an LLM pass and deduplicates by canonical domain."
+                body="Pulls fresh candidates from Hacker News, Reddit, RSS feeds, and the YC directory. Classifies each one with an LLM pass and deduplicates by canonical domain."
               />
             </Reveal>
             <Reveal delay={200}>
@@ -249,33 +248,33 @@ export default async function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           4. THE COMMITTEE
          ═══════════════════════════════════════════════════════ */}
-      <section className="relative px-8 py-24">
+      <section className="relative px-6 md:px-8 py-16 md:py-24">
         <div
           className="glow-orb glow-orb-violet glow-orb-animate"
           style={{
-            width: 500,
-            height: 500,
+            width: 400,
+            height: 400,
             bottom: "-10%",
-            right: "-15%",
+            right: "-30%",
             animationDelay: "5s",
           }}
           aria-hidden
         />
         <div className="max-w-6xl mx-auto relative">
           <Reveal>
-            <div className="text-center mb-16">
+            <div className="text-center mb-10 md:mb-16">
               <div className="eyebrow mb-4">The committee</div>
-              <h2 className="section-heading text-3xl md:text-4xl font-semibold">
-  Five specialists, one vote.
-</h2>
-              <p className="text-[var(--color-text-mid)] mt-4 max-w-2xl mx-auto">
+              <h2 className="text-2xl md:text-4xl font-semibold">
+                Five specialists, one vote.
+              </h2>
+              <p className="text-[var(--color-text-mid)] mt-4 max-w-2xl mx-auto text-sm md:text-base">
                 Each agent has a distinct mandate and a fixed weight. The
                 rubric is locked — same weights, same thresholds, every run.
               </p>
             </div>
           </Reveal>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
             {AGENTS.map((agent, i) => (
               <Reveal key={agent.key} delay={i * 80}>
                 <AgentCard agent={agent} />
@@ -290,18 +289,18 @@ export default async function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           5. SAMPLE OUTPUT
          ═══════════════════════════════════════════════════════ */}
-      <section className="relative px-8 py-24">
+      <section className="relative px-6 md:px-8 py-16 md:py-24">
         <div className="max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
             <Reveal>
               <div>
                 <div className="eyebrow mb-4">Sample output</div>
-                <h2 className="section-heading text-3xl md:text-4xl font-semibold mb-6 leading-tight">
-  Full investment memos,
-  <br />
-  written in seconds.
-</h2>
-                <p className="text-[var(--color-text-mid)] leading-relaxed mb-6">
+                <h2 className="text-2xl md:text-4xl font-semibold mb-6 leading-tight">
+                  Full investment memos,
+                  <br />
+                  written in seconds.
+                </h2>
+                <p className="text-[var(--color-text-mid)] leading-relaxed mb-6 text-sm md:text-base">
                   Every escalated candidate gets a VC-memo-style report:
                   executive summary, competitive landscape, technical and
                   financial analysis, committee debate, and a final
@@ -333,7 +332,7 @@ export default async function LandingPage() {
             </Reveal>
 
             <Reveal delay={200}>
-              <div className="panel-lg slow-float">
+              <div className="panel-lg md:slow-float">
                 <div className="flex items-center justify-between mb-6 pb-4 border-b border-[var(--color-border-soft)]">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-[var(--color-neon)] pulse-glow" />
@@ -373,18 +372,18 @@ export default async function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           6. WHO IT'S FOR
          ═══════════════════════════════════════════════════════ */}
-      <section className="relative px-8 py-24">
+      <section className="relative px-6 md:px-8 py-16 md:py-24">
         <div className="max-w-5xl mx-auto">
           <Reveal>
-            <div className="text-center mb-16">
+            <div className="text-center mb-10 md:mb-16">
               <div className="eyebrow mb-4">Who it&apos;s for</div>
-              <h2 className="section-heading text-3xl md:text-4xl font-semibold">
-  Built for the people drowning in deal flow.
-</h2>
+              <h2 className="text-2xl md:text-4xl font-semibold">
+                Built for the people drowning in deal flow.
+              </h2>
             </div>
           </Reveal>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Reveal delay={100}>
               <AudienceCard
                 glyph="◆"
@@ -415,29 +414,29 @@ export default async function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           7. WHY IT'S DIFFERENT
          ═══════════════════════════════════════════════════════ */}
-      <section className="relative px-8 py-24">
+      <section className="relative px-6 md:px-8 py-16 md:py-24">
         <div
           className="glow-orb glow-orb-neon glow-orb-animate"
           style={{
-            width: 400,
-            height: 400,
+            width: 320,
+            height: 320,
             top: "10%",
-            right: "-10%",
+            right: "-20%",
             animationDelay: "7s",
           }}
           aria-hidden
         />
         <div className="max-w-4xl mx-auto relative">
           <Reveal>
-            <div className="text-center mb-16">
+            <div className="text-center mb-10 md:mb-16">
               <div className="eyebrow mb-4">Why it&apos;s different</div>
-              <h2 className="section-heading text-3xl md:text-4xl font-semibold">
-  A committee, not a chatbot.
-</h2>
+              <h2 className="text-2xl md:text-4xl font-semibold">
+                A committee, not a chatbot.
+              </h2>
             </div>
           </Reveal>
 
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             <Reveal delay={100}>
               <DifferentRow
                 glyph="◈"
@@ -475,14 +474,14 @@ export default async function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           8. FAQ
          ═══════════════════════════════════════════════════════ */}
-      <section className="relative px-8 py-24">
+      <section className="relative px-6 md:px-8 py-16 md:py-24">
         <div className="max-w-3xl mx-auto">
           <Reveal>
-            <div className="text-center mb-16">
+            <div className="text-center mb-10 md:mb-16">
               <div className="eyebrow mb-4">FAQ</div>
-              <h2 className="section-heading text-3xl md:text-4xl font-semibold">
-  Common questions.
-</h2>
+              <h2 className="text-2xl md:text-4xl font-semibold">
+                Common questions.
+              </h2>
             </div>
           </Reveal>
 
@@ -491,10 +490,10 @@ export default async function LandingPage() {
               <Reveal key={i} delay={i * 60}>
                 <details className="panel group">
                   <summary className="cursor-pointer list-none flex items-center justify-between gap-4">
-                    <span className="font-medium text-[var(--color-text-hi)]">
+                    <span className="font-medium text-[var(--color-text-hi)] text-sm md:text-base">
                       {item.q}
                     </span>
-                    <span className="text-[var(--color-neon)] font-mono transition-transform group-open:rotate-45">
+                    <span className="text-[var(--color-neon)] font-mono transition-transform group-open:rotate-45 flex-shrink-0">
                       +
                     </span>
                   </summary>
@@ -511,12 +510,12 @@ export default async function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           9. FINAL CTA
          ═══════════════════════════════════════════════════════ */}
-      <section className="relative px-8 py-32">
+      <section className="relative px-6 md:px-8 py-20 md:py-32">
         <div
           className="glow-orb glow-orb-neon glow-orb-animate"
           style={{
-            width: 600,
-            height: 600,
+            width: 500,
+            height: 500,
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
@@ -529,28 +528,34 @@ export default async function LandingPage() {
             <div className="eyebrow mb-6">Get started</div>
           </Reveal>
           <Reveal delay={100}>
-            <h2 className="section-heading text-4xl md:text-6xl font-semibold mb-6 leading-tight">
-  Start with a sample.
-</h2>
+            <h2 className="text-3xl md:text-6xl font-semibold mb-6 leading-tight">
+              Start with a sample.
+            </h2>
           </Reveal>
           <Reveal delay={200}>
-            <p className="text-[var(--color-text-mid)] text-lg mb-10 max-w-lg mx-auto">
+            <p className="text-[var(--color-text-mid)] text-base md:text-lg mb-8 md:mb-10 max-w-lg mx-auto">
               Read a real committee report. Or submit your own idea and see
               what the five specialists have to say.
             </p>
           </Reveal>
           <Reveal delay={300}>
-            <div className="flex items-center justify-center gap-4 flex-wrap">
-              <Link href="/signup" className="btn-primary">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+              <Link
+                href="/signup"
+                className="btn-primary w-full sm:w-auto text-center"
+              >
                 Create an account
               </Link>
-              <Link href="/sample" className="btn-ghost">
+              <Link
+                href="/sample"
+                className="btn-ghost w-full sm:w-auto text-center"
+              >
                 Read a sample report
               </Link>
             </div>
           </Reveal>
           <Reveal delay={500}>
-            <p className="text-xs text-[var(--color-text-low)] font-mono mt-12">
+            <p className="text-xs text-[var(--color-text-low)] font-mono mt-10 md:mt-12">
               All predictions are LLM-generated estimates, not financial
               advice.
             </p>
@@ -602,7 +607,7 @@ function StageCard({
           {glyph}
         </span>
       </div>
-      <h3 className="text-xl font-semibold mb-3">{title}</h3>
+      <h3 className="text-lg md:text-xl font-semibold mb-3">{title}</h3>
       <p className="text-sm text-[var(--color-text-mid)] leading-relaxed">
         {body}
       </p>
@@ -631,17 +636,17 @@ function AgentCard({ agent }: { agent: (typeof AGENTS)[number] }) {
         />
       </div>
 
-      <div className="p-5 text-center flex flex-col items-center relative z-10">
-        <div className="font-semibold text-[15px] mb-1 transition-colors group-hover:text-[var(--color-neon)]">
+      <div className="p-3 md:p-5 text-center flex flex-col items-center relative z-10">
+        <div className="font-semibold text-[13px] md:text-[15px] mb-1 transition-colors group-hover:text-[var(--color-neon)]">
           {agent.name}
         </div>
-        <div className="font-mono text-[10px] text-[var(--color-text-low)] uppercase tracking-wider mb-3">
+        <div className="font-mono text-[9px] md:text-[10px] text-[var(--color-text-low)] uppercase tracking-wider mb-2 md:mb-3">
           {agent.title}
         </div>
-        <div className="font-mono text-xs text-[var(--color-neon)] mb-4 transition-all group-hover:drop-shadow-[0_0_8px_var(--color-neon-glow)]">
+        <div className="font-mono text-xs text-[var(--color-neon)] mb-3 md:mb-4 transition-all group-hover:drop-shadow-[0_0_8px_var(--color-neon-glow)]">
           {agent.weight}
         </div>
-        <p className="text-xs text-[var(--color-text-mid)] leading-relaxed">
+        <p className="text-[10px] md:text-xs text-[var(--color-text-mid)] leading-relaxed">
           {agent.description}
         </p>
       </div>
@@ -667,10 +672,12 @@ function MiniStat({
 
   return (
     <div>
-      <div className="font-mono text-[10px] text-[var(--color-text-low)] uppercase tracking-wider mb-1">
+      <div className="font-mono text-[9px] md:text-[10px] text-[var(--color-text-low)] uppercase tracking-wider mb-1">
         {label}
       </div>
-      <div className={`text-lg font-bold ${toneClass}`}>{value}</div>
+      <div className={`text-base md:text-lg font-bold ${toneClass}`}>
+        {value}
+      </div>
     </div>
   );
 }
@@ -707,12 +714,12 @@ function DifferentRow({
   body: string;
 }) {
   return (
-    <div className="flex items-start gap-5 panel-lg hover:border-[var(--color-neon)] transition-colors duration-300">
-      <span className="text-[var(--color-neon)] text-2xl flex-shrink-0 mt-1">
+    <div className="flex items-start gap-4 md:gap-5 panel-lg hover:border-[var(--color-neon)] transition-colors duration-300">
+      <span className="text-[var(--color-neon)] text-xl md:text-2xl flex-shrink-0 mt-1">
         {glyph}
       </span>
       <div>
-        <h3 className="font-semibold text-lg mb-2">{title}</h3>
+        <h3 className="font-semibold text-base md:text-lg mb-2">{title}</h3>
         <p className="text-sm text-[var(--color-text-mid)] leading-relaxed">
           {body}
         </p>
