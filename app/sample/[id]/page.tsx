@@ -6,12 +6,6 @@ import { Logo } from "@/components/Logo";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Public read-only view of a discovery report.
- *
- * Only shows reports where subjectType = "candidate".
- * Idea-evaluation reports stay private.
- */
 export default async function SampleReportPage({
   params,
 }: {
@@ -23,7 +17,6 @@ export default async function SampleReportPage({
     where: { id },
   });
 
-  // Only discovery reports are publicly viewable
   if (!report || report.subjectType !== "candidate") {
     notFound();
   }
@@ -61,7 +54,7 @@ export default async function SampleReportPage({
 
   return (
     <main className="relative z-10 min-h-screen">
-      <nav className="flex items-center justify-between px-8 py-6 border-b border-[var(--color-border-soft)]">
+      <nav className="flex items-center justify-between px-6 md:px-8 py-4 md:py-6 border-b border-[var(--color-border-soft)]">
         <Logo />
         <div className="flex items-center gap-3">
           <span className="hidden md:inline text-xs text-[var(--color-text-low)] font-mono uppercase tracking-wider">
@@ -73,24 +66,27 @@ export default async function SampleReportPage({
         </div>
       </nav>
 
-      <div className="max-w-4xl mx-auto px-8 py-12">
-        <div className="mb-8">
+      <div className="max-w-4xl mx-auto px-6 md:px-8 py-8 md:py-12">
+        {/* Header */}
+        <div className="mb-6 md:mb-8">
           <div className="eyebrow">Sample report</div>
-          <div className="flex items-start justify-between gap-4">
-            <h1 className="text-3xl font-semibold">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
+            <h1 className="text-2xl md:text-3xl font-semibold leading-snug break-words">
               {report.company ?? "Unknown company"}
             </h1>
             {report.decision && (
               <span
                 className={
-                  report.decision === "INVEST" ? "badge-invest" : "badge-pass"
+                  report.decision === "INVEST"
+                    ? "badge-invest"
+                    : "badge-pass"
                 }
               >
                 {report.decision}
               </span>
             )}
           </div>
-          <div className="flex items-center gap-3 mt-2 text-xs font-mono text-[var(--color-text-low)]">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs font-mono text-[var(--color-text-low)]">
             <span>{report.createdAt.toISOString().slice(0, 10)}</span>
             {typeof report.weightedScore === "number" && (
               <>
@@ -101,6 +97,7 @@ export default async function SampleReportPage({
           </div>
         </div>
 
+        {/* Source info */}
         {sourceInfo && (
           <div className="panel mb-6">
             <div className="eyebrow mb-3">Source</div>
@@ -138,7 +135,8 @@ export default async function SampleReportPage({
           </div>
         )}
 
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        {/* Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 md:mb-8">
           {typeof starRating === "number" && (
             <div className="stat-card">
               <div className="stat-index">Rating</div>
@@ -171,8 +169,9 @@ export default async function SampleReportPage({
           )}
         </div>
 
+        {/* Highlight boxes */}
         {(biggestRisk || biggestAdvantage) && (
-          <div className="grid grid-cols-2 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 md:mb-8">
             {biggestAdvantage && (
               <div className="panel">
                 <div className="eyebrow text-[var(--color-neon)]">
@@ -196,6 +195,7 @@ export default async function SampleReportPage({
           </div>
         )}
 
+        {/* Sections */}
         <div className="space-y-6">
           {sectionOrder.map((key) => {
             const value = json[key];
@@ -206,7 +206,9 @@ export default async function SampleReportPage({
               .join(" ");
             return (
               <div key={key} className="panel-lg">
-                <h2 className="text-lg font-semibold mb-3">{title}</h2>
+                <h2 className="text-base md:text-lg font-semibold mb-3">
+                  {title}
+                </h2>
                 <p className="text-sm leading-relaxed whitespace-pre-wrap text-[var(--color-text-mid)]">
                   {value}
                 </p>
@@ -221,8 +223,9 @@ export default async function SampleReportPage({
           </div>
         )}
 
-        <div className="mt-12 panel-lg text-center">
-          <h2 className="text-xl font-semibold mb-3">
+        {/* CTA */}
+        <div className="mt-10 md:mt-12 panel-lg text-center">
+          <h2 className="text-lg md:text-xl font-semibold mb-3">
             Want reports like this on your own idea?
           </h2>
           <p className="text-sm text-[var(--color-text-mid)] mb-5 max-w-lg mx-auto">
@@ -236,7 +239,8 @@ export default async function SampleReportPage({
         </div>
       </div>
 
-      <footer className="px-8 py-10 border-t border-[var(--color-border-soft)] mt-12">
+      {/* Footer */}
+      <footer className="px-6 md:px-8 py-8 md:py-10 border-t border-[var(--color-border-soft)] mt-10 md:mt-12">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Image

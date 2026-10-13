@@ -23,31 +23,8 @@ export default function ProgressPage() {
   const [status, setStatus] = useState<Status | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const [retrying, setRetrying] = useState(false);
   const [retryError, setRetryError] = useState("");
-
-  async function handleRetry() {
-    setRetrying(true);
-    setRetryError("");
-    try {
-      const res = await fetch(
-        `/api/v1/idea-evaluations/${id}/evaluation/start`,
-        { method: "POST" }
-      );
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        setRetryError(body?.error?.message ?? "Retry failed.");
-        setRetrying(false);
-        return;
-      }
-      // Reload status — will see "evaluating" then poll again
-      window.location.reload();
-    } catch (e) {
-      setRetryError(e instanceof Error ? e.message : "Retry failed.");
-      setRetrying(false);
-    }
-  }
 
   const poll = useCallback(async () => {
     const res = await fetch(
@@ -78,12 +55,11 @@ export default function ProgressPage() {
         return;
       }
       if (data?.status === "failed_partial") {
-        return; // stop polling, show error state
+        return;
       }
       if (data?.status === "evaluating") {
         setTimeout(tick, POLL_INTERVAL_MS);
       }
-      // any other status: don't keep polling
     }
 
     tick();
@@ -92,15 +68,39 @@ export default function ProgressPage() {
     };
   }, [poll, router, id]);
 
+  async function handleRetry() {
+    setRetrying(true);
+    setRetryError("");
+    try {
+      const res = await fetch(
+        `/api/v1/idea-evaluations/${id}/evaluation/start`,
+        { method: "POST" }
+      );
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setRetryError(body?.error?.message ?? "Retry failed.");
+        setRetrying(false);
+        return;
+      }
+      window.location.reload();
+    } catch (e) {
+      setRetryError(e instanceof Error ? e.message : "Retry failed.");
+      setRetrying(false);
+    }
+  }
+
   if (loading) {
     return <div className="loading-state">Loading evaluation…</div>;
   }
 
   if (error) {
     return (
-      <div className="empty-state">
+      <div className="empty-state max-w-2xl mx-auto">
         <h3>{error}</h3>
-        <Link href="/dashboard/evaluate" className="btn-ghost inline-block mt-4">
+        <Link
+          href="/dashboard/evaluate"
+          className="btn-ghost inline-block mt-4"
+        >
           Back to evaluations
         </Link>
       </div>
@@ -109,9 +109,12 @@ export default function ProgressPage() {
 
   if (!status) {
     return (
-      <div className="empty-state">
+      <div className="empty-state max-w-2xl mx-auto">
         <h3>Evaluation not found</h3>
-        <Link href="/dashboard/evaluate" className="btn-ghost inline-block mt-4">
+        <Link
+          href="/dashboard/evaluate"
+          className="btn-ghost inline-block mt-4"
+        >
           Back to evaluations
         </Link>
       </div>
@@ -122,22 +125,33 @@ export default function ProgressPage() {
     return (
       <div className="max-w-2xl">
         <div className="eyebrow">Evaluation</div>
-        <h1 className="text-3xl font-semibold mb-4">Something went wrong</h1>
+        <h1 className="text-2xl md:text-3xl font-semibold mb-4">
+          Something went wrong
+        </h1>
         <div className="panel-lg">
           <p className="text-sm text-[var(--color-text-mid)] leading-relaxed mb-4">
             {status.failureReason ??
               "The committee run failed. Your interview answers are saved — you can retry."}
           </p>
-          <div className="flex items-center gap-3">
-            <button onClick={handleRetry} disabled={retrying} className="btn-primary">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <button
+              onClick={handleRetry}
+              disabled={retrying}
+              className="btn-primary"
+            >
               {retrying ? "Retrying…" : "Retry committee run"}
             </button>
-            <Link href="/dashboard/evaluate" className="btn-ghost inline-block">
+            <Link
+              href="/dashboard/evaluate"
+              className="btn-ghost inline-block text-center"
+            >
               Back to evaluations
             </Link>
           </div>
           {retryError && (
-            <p className="text-[var(--color-coral)] text-sm mt-4">{retryError}</p>
+            <p className="text-[var(--color-neon-red)] text-sm mt-4">
+              {retryError}
+            </p>
           )}
         </div>
       </div>
@@ -148,9 +162,11 @@ export default function ProgressPage() {
 
   return (
     <div className="max-w-2xl">
-      <div className="mb-8">
+      <div className="mb-6 md:mb-8">
         <div className="eyebrow">Evaluation in progress</div>
-        <h1 className="text-3xl font-semibold">The committee is running</h1>
+        <h1 className="text-2xl md:text-3xl font-semibold">
+          The committee is running
+        </h1>
         <p className="text-[var(--color-text-mid)] text-sm mt-2">
           Five specialist agents are evaluating your idea, debating their
           findings, and voting. This usually takes a few minutes.
@@ -160,11 +176,11 @@ export default function ProgressPage() {
       <div className="panel-lg">
         <div className="flex items-center gap-4 mb-6">
           <div
-            className="w-10 h-10 rounded-full border-2 border-[var(--color-teal)] border-t-transparent animate-spin"
+            className="w-10 h-10 rounded-full border-2 border-[var(--color-neon)] border-t-transparent animate-spin flex-shrink-0"
             aria-hidden
           />
-          <div>
-            <div className="font-medium">{step}</div>
+          <div className="min-w-0">
+            <div className="font-medium truncate">{step}</div>
             <div className="text-xs text-[var(--color-text-low)] font-mono">
               Status: {status.status}
             </div>
@@ -173,21 +189,21 @@ export default function ProgressPage() {
 
         <div className="h-1 bg-[var(--color-border-soft)] rounded-full overflow-hidden">
           <div
-            className="h-full bg-[var(--color-teal)] transition-all duration-500"
+            className="h-full bg-[var(--color-neon)] transition-all duration-500"
             style={{ width: `${status.progress?.percent ?? 15}%` }}
           />
         </div>
 
         <p className="text-xs text-[var(--color-text-low)] mt-6">
-          The evaluation engine runs in the background. You can close this page
-          and come back later — results will be on the report page.
+          The evaluation engine runs in the background. You can close this
+          page and come back later — results will be on the report page.
         </p>
       </div>
 
       <div className="mt-6 text-center">
         <Link
           href="/dashboard/evaluate"
-          className="text-sm text-[var(--color-text-low)] hover:text-[var(--color-teal)]"
+          className="text-sm text-[var(--color-text-low)] hover:text-[var(--color-neon)]"
         >
           ← Back to evaluations
         </Link>
