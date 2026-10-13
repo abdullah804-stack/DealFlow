@@ -1100,3 +1100,16 @@ input {
     border-bottom-color: var(--color-border-soft);
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   AGENT STRIP — mobile horizontal scroll
+   ═══════════════════════════════════════════════════════════════════ */
+
+.agent-strip {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.agent-strip::-webkit-scrollbar {
+  display: none;
+}

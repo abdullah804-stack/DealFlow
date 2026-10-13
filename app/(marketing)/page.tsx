@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { Reveal } from "@/components/Reveal";
+import { AgentStrip } from "@/components/AgentStrip";
 
 export const dynamic = "force-dynamic";
 
@@ -142,10 +143,16 @@ export default async function LandingPage() {
           </Reveal>
           <Reveal delay={300}>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-              <Link href="/signup" className="btn-primary w-full sm:w-auto text-center">
+              <Link
+                href="/signup"
+                className="btn-primary w-full sm:w-auto text-center"
+              >
                 Start exploring
               </Link>
-              <Link href="/sample" className="btn-ghost w-full sm:w-auto text-center">
+              <Link
+                href="/sample"
+                className="btn-ghost w-full sm:w-auto text-center"
+              >
                 See a sample report
               </Link>
             </div>
@@ -274,7 +281,14 @@ export default async function LandingPage() {
             </div>
           </Reveal>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
+          {/* Mobile: auto-scrolling strip. Desktop: 5-col grid. */}
+          <div className="md:hidden">
+            <AgentStrip
+              agents={AGENTS}
+              renderCard={(agent) => <AgentCard agent={agent} />}
+            />
+          </div>
+          <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
             {AGENTS.map((agent, i) => (
               <Reveal key={agent.key} delay={i * 80}>
                 <AgentCard agent={agent} />
@@ -630,7 +644,7 @@ function AgentCard({ agent }: { agent: (typeof AGENTS)[number] }) {
           src={agent.image}
           alt={agent.name}
           fill
-          sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
+          sizes="(max-width: 768px) 90vw, (max-width: 1024px) 33vw, 20vw"
           className="object-contain object-bottom agent-card-image"
           priority={false}
         />
